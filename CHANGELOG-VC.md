@@ -46,6 +46,7 @@ All the remaining, non-critical fixes.
 * Mission title and 'Mission Passed' texts now stay on screen for the same duration, regardless of screen resolution.
 * The inner padding of the text boxes with a background now scales to resolution correctly.
 * The vertical offset of the weapon name text in Ammu-Nation now scales to resolution correctly.
+* The downward-pointing destination blip in the Map Legend now displays with a correct outline.
 * `FILE_FLAG_NO_BUFFERING` flag has been removed from IMG reading functions - speeding up streaming.
 * Free resprays will not carry on a New Game now.
 * Fixed ambulance and firetruck dispatch timers - they reset on New Game now.

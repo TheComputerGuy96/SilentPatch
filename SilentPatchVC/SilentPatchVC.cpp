@@ -648,6 +648,22 @@ namespace BigMessage3ScalingFixes
 }
 
 
+// ============= Fix an incorrect vertex setup for the outline of a destination blip in the Map Legend =============
+namespace LegendBlipFix
+{
+	static void (*orgDraw2DPolygon)(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, const CRGBA& color);
+	static void Draw2DPolygon_FixVertices(float x1, float y1, float x2, float y2, float /*x3*/, float y3, float x4, float y4, const CRGBA& color)
+	{
+		// In this setup, x3 is incorrect - it should have been (X + scaleX(14.0f)) but is (X + scaleX(2.0f)), same as x4
+		// We can recover the correct dimensions from x1 (bottom center) and x4 (top left):
+		// x3 = x1 + (x1 - x4)
+		// Write it out in full like this (without simplifying), so we know (x1 - x4) is done at a correct floating point precision.
+		const float x3 = x1 + (x1 - x4);
+		orgDraw2DPolygon(x1, y1, x2, y2, x3, y3, x4, y4, color);
+	}
+}
+
+
 float FixedRefValue()
 {
 	return 1.0f;
@@ -2913,6 +2929,17 @@ void Patch_VC_Common()
 	{
 		auto set_peds_choking = get_pattern("0F 84 ? ? ? ? 8D 4B 34 D9 41 08");
 		Nop(set_peds_choking, 6);
+	}
+	TXN_CATCH();
+
+
+	// Fix an incorrect vertex setup for the outline of a destination blip in the Map Legend
+	try
+	{
+		using namespace LegendBlipFix;
+
+		auto draw2dPolygon = get_pattern("E8 ? ? ? ? D9 EE D9 EE D9 EE DB 05 ? ? ? ? 89 5C 24 24");
+		InterceptCall(draw2dPolygon, orgDraw2DPolygon, Draw2DPolygon_FixVertices);
 	}
 	TXN_CATCH();
 }
