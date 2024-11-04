@@ -8,8 +8,8 @@
 
 #include <windows.h>
 
-#include <Shlwapi.h>
-#include <ShlObj.h>
+#include <shlwapi.h>
+#include <shlobj.h>
 #include "Utils/MemoryMgr.h"
 #include "Utils/Patterns.h"
 
