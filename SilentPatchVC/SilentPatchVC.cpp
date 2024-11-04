@@ -16,7 +16,7 @@
 
 #include <array>
 #include <memory>
-#include <Shlwapi.h>
+#include <shlwapi.h>
 #include <time.h>
 
 #include "Utils/ModuleList.hpp"
