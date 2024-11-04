@@ -198,7 +198,7 @@ static bool PatchIAT()
 static bool PatchIAT_ByPointers()
 {
 	pOrgSystemParametersInfoA = SystemParametersInfoA;
-	memcpy( orgCode, pOrgSystemParametersInfoA, sizeof(orgCode) );
+	memcpy( orgCode, reinterpret_cast<void*>(pOrgSystemParametersInfoA), sizeof(orgCode) );
 	Memory::VP::InjectHook( pOrgSystemParametersInfoA, SystemParametersInfoA_OverwritingHook, Memory::HookType::Jump );
 	return true;
 }
