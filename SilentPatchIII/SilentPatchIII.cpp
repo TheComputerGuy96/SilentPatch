@@ -194,37 +194,37 @@ void ResetMousePos()
 	orgConstructRenderList();
 }
 
-void __declspec(naked) M16StatsFix()
+__declspec(naked) void M16StatsFix()
 {
 	_asm
 	{
-		add		eax, 34h
-		add		ebx, 34h
-		mov		ecx, [InstantHitsFiredByPlayer]
-		inc		[ecx]
-		retn
+		add		eax, 0x34
+		add		ebx, 0x34
+		mov		ecx, InstantHitsFiredByPlayer
+		inc		dword ptr [ecx]
+		ret
 	}
 }
 
-void __declspec(naked) HeadlightsFix()
+static const float fMinusOne = -1.0f;
+__declspec(naked) void HeadlightsFix()
 {
-	static const float		fMinusOne = -1.0f;
 	_asm
 	{
-		fld		[esp+708h-690h]
+		fld		dword ptr [esp+0x708-0x690]
 		fcomp	fMinusOne
 		fnstsw	ax
 		and		ah, 5
 		cmp		ah, 1
 		jnz		HeadlightsFix_DontLimit
 		fld		fMinusOne
-		fstp	[esp+708h-690h]
+		fstp	dword ptr [esp+0x708-0x690]
 
-HeadlightsFix_DontLimit:
-		fld		[esp+708h-690h]
+	HeadlightsFix_DontLimit:
+		fld		dword ptr [esp+0x708-0x690]
 		fabs
 		fld		st
-		jmp		[HeadlightsFix_JumpBack]
+		jmp		HeadlightsFix_JumpBack
 	}
 }
 
@@ -312,68 +312,68 @@ float FixedRefValue()
 	return 1.0f;
 }
 
-void __declspec(naked) SubtitlesShadowFix()
+__declspec(naked) void SubtitlesShadowFix()
 {
 	_asm
 	{
 		push	eax
 		call	Recalculate
-		fadd	[esp+50h+8]
-		fadd	[fShadowYSize]
+		fadd	dword ptr [esp+0x50+8]
+		fadd	fShadowYSize
 		jmp		SubtitlesShadowFix_JumpBack
 	}
 }
 
-void __declspec(naked) III_SensResetFix()
+__declspec(naked) void III_SensResetFix()
 {
 	_asm
 	{
-		mov     ecx, 3A76h
+		mov     ecx, 0x3A76
 		mov     edi, ebp
-		fld     dword ptr [ebp+194h]
-		fld     dword ptr [ebp+198h]
+		fld     dword ptr [ebp+0x194]
+		fld     dword ptr [ebp+0x198]
 		rep		stosd
-		fstp	dword ptr [ebp+198h]
-		fstp	dword ptr [ebp+194h]
-		retn
+		fstp	dword ptr [ebp+0x198]
+		fstp	dword ptr [ebp+0x194]
+		ret
 	}
 }
 
 static void* RadarBoundsCheckCoordBlip_JumpBack = AddressByVersion<void*>(0x4A55B8, 0x4A56A8, 0x4A5638);
 static void* RadarBoundsCheckCoordBlip_Count = AddressByVersion<void*>(0x4A55AF, 0x4A569F, 0x4A562F);
-void __declspec(naked) RadarBoundsCheckCoordBlip()
+__declspec(naked) void RadarBoundsCheckCoordBlip()
 {
 	_asm
 	{
-		mov		edx, dword ptr [RadarBoundsCheckCoordBlip_Count]
+		mov		edx, RadarBoundsCheckCoordBlip_Count
 		cmp		cl, byte ptr [edx]
 		jnb		OutOfBounds
 		mov     edx, ecx
 		mov     eax, [esp+4]
 		jmp		RadarBoundsCheckCoordBlip_JumpBack
 
-OutOfBounds:
+	OutOfBounds:
 		or		eax, -1
 		fcompp
-		retn
+		ret
 	}
 }
 
 static void* RadarBoundsCheckEntityBlip_JumpBack = AddressByVersion<void*>(0x4A565E, 0x4A574E, 0x4A56DE);
-void __declspec(naked) RadarBoundsCheckEntityBlip()
+__declspec(naked) void RadarBoundsCheckEntityBlip()
 {
 	_asm
 	{
-		mov		edx, dword ptr [RadarBoundsCheckCoordBlip_Count]
+		mov		edx, RadarBoundsCheckCoordBlip_Count
 		cmp		cl, byte ptr [edx]
 		jnb		OutOfBounds
 		mov     edx, ecx
 		mov     eax, [esp+4]
 		jmp		RadarBoundsCheckEntityBlip_JumpBack
 
-		OutOfBounds:
+	OutOfBounds:
 		or		eax, -1
-		retn
+		ret
 	}
 }
 
@@ -411,11 +411,12 @@ unsigned int __cdecl AutoPilotTimerCalculation_III(unsigned int nTimer, int nSca
 	return nTimer - static_cast<unsigned int>(nScaleFactor * fScaleCoef);
 }
 
-void __declspec(naked) AutoPilotTimerFix_III()
+__declspec(naked) void AutoPilotTimerFix_III()
 {
-	_asm {
-		push    dword ptr[esp + 0x4]
-		push    dword ptr[ebx + 0x10]
+	_asm
+	{
+		push    dword ptr [esp + 0x4]
+		push    dword ptr [ebx + 0x10]
 		push    eax
 		call    AutoPilotTimerCalculation_III
 		add     esp, 0xC
@@ -424,7 +425,7 @@ void __declspec(naked) AutoPilotTimerFix_III()
 		pop     ebp
 		pop     esi
 		pop     ebx
-		retn    4
+		ret     4
 	}
 }
 
@@ -576,22 +577,22 @@ namespace SirenSwitchingFix
 // ============= Fixed vehicles exploding twice if the driver leaves the car while it's exploding =============
 namespace RemoveDriverStatusFix
 {
-	__declspec(naked) void RemoveDriver_SetStatus()
+	__declspec(naked) static void RemoveDriver_SetStatus()
 	{
 		// if (m_nStatus != STATUS_WRECKED)
 		//   m_nStatus = STATUS_ABANDONED;
 		_asm
 		{
-			mov		ah, [ecx+50h]
+			mov		ah, [ecx+0x50]
 			mov		al, ah
-			and		ah, 0F8h
-			cmp		ah, 28h
+			and		ah, 0xF8
+			cmp		ah, 0x28
 			je		DontSetStatus
 			and     al, 7
-			or      al, 20h
+			or      al, 0x20
 
 		DontSetStatus:
-			retn
+			ret
 		}
 	}
 }
@@ -623,17 +624,17 @@ namespace EvasiveDiveFix
 		return CGeneral::LimitRadianAngle(angle);
 	}
 
-	__declspec(naked) void CalculateAngle_Hook()
+	__declspec(naked) static void CalculateAngle_Hook()
 	{
 		_asm
 		{
-			push    dword ptr [esi+7Ch]
-			push	dword ptr [esi+78h]
+			push    dword ptr [esi+0x7C]
+			push	dword ptr [esi+0x78]
 			call	CalculateAngle
 			add		esp, 8
 
 			mov     ecx, ebp
-			retn
+			ret
 		}
 	}
 }
@@ -651,7 +652,7 @@ namespace NullTerminatedLines
 		{
 			mov		eax, [esp+4]
 			mov		byte ptr [eax+ecx], 0
-			jmp		[orgSscanf_LoadPath]
+			jmp		orgSscanf_LoadPath
 		}
 	}
 
@@ -662,7 +663,7 @@ namespace NullTerminatedLines
 		{
 			mov		eax, [esp+4]
 			mov		byte ptr [eax+ecx], 0
-			jmp		[orgSscanf1]
+			jmp		orgSscanf1
 		}
 	}
 
@@ -670,12 +671,12 @@ namespace NullTerminatedLines
 	{
 		_asm
 		{
-			mov		ecx, [gString]
+			mov		ecx, gString
 			mov		byte ptr [ecx+edx], 0
 			mov     ecx, [esi]
 			inc     ebp
-			add     ecx, [esp+0ACh-98h]
-			retn
+			add     ecx, [esp+0xAC-0x98]
+			ret
 		}
 	}
 }
@@ -705,14 +706,14 @@ namespace DodoKeyboardControls
 	{
 		_asm
 		{
-			call	[orgFindPlayerVehicle]
-			mov		ecx, [bAllDodosCheat]
+			call	orgFindPlayerVehicle
+			mov		ecx, bAllDodosCheat
 			cmp		byte ptr [ecx], 0
 			je		CheatDisabled
-			mov		byte ptr [esp+1Ch-14h], 1
+			mov		byte ptr [esp+0x1C-0x14], 1
 
 		CheatDisabled:
-			retn
+			ret
 		}
 	}
 }
@@ -768,11 +769,11 @@ namespace GenerateNewPickup_ReuseObjectFix
 	static void* pPickupObject;
 	static void (*orgGiveUsAPickUpObject)(int);
 
-	__declspec(naked) void GiveUsAPickUpObject_CleanUpObject()
+	__declspec(naked) static void GiveUsAPickUpObject_CleanUpObject()
 	{
 		_asm
 		{
-			mov		eax, [pPickupObject]
+			mov		eax, pPickupObject
 			add		eax, ebp
 			mov		eax, [eax]
 			test	eax, eax
@@ -781,7 +782,7 @@ namespace GenerateNewPickup_ReuseObjectFix
 			mov		edi, eax
 
 			push	edi
-			call	[WorldRemove]
+			call	WorldRemove
 			add		esp, 4
 
 			// Call dtor
@@ -793,7 +794,7 @@ namespace GenerateNewPickup_ReuseObjectFix
 			pop		edi
 
 		NoPickup:
-			jmp		[orgGiveUsAPickUpObject]
+			jmp		orgGiveUsAPickUpObject
 		}
 	}
 }
