@@ -1,6 +1,5 @@
 #include "SVF.h"
 
-#include <cstdint>
 #include <algorithm>
 #include <map>
 
