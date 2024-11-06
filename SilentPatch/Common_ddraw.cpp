@@ -15,8 +15,6 @@
 
 #pragma comment(lib, "shlwapi.lib")
 
-extern char** ppUserFilesDir;
-
 namespace Common {
 	char* GetMyDocumentsPath()
 	{
