@@ -669,12 +669,12 @@ float FixedRefValue()
 	return 1.0f;
 }
 
-void __declspec(naked) SubtitlesShadowFix()
+__declspec(naked) void SubtitlesShadowFix()
 {
 	_asm
 	{
 		mov		[esp], eax
-		fild	[esp]
+		fild	dword ptr [esp]
 		push	eax
 		lea		eax, [esp+20h-18h]
 		push	eax
@@ -685,14 +685,14 @@ void __declspec(naked) SubtitlesShadowFix()
 	}
 }
 
-void __declspec(naked) CreateInstance_BikeFix()
+__declspec(naked) void CreateInstance_BikeFix()
 {
 	_asm
 	{
 		push	eax
 		mov		ecx, ebp
 		call	CVehicleModelInfo::GetExtrasFrame
-		retn
+		ret
 	}
 }
 
@@ -731,11 +731,12 @@ unsigned int __cdecl AutoPilotTimerCalculation_VC(unsigned int nTimer, int nScal
 	return nTimer - static_cast<unsigned int>(nScaleFactor * fScaleCoef);
 }
 
-void __declspec(naked) AutoPilotTimerFix_VC()
+__declspec(naked) void AutoPilotTimerFix_VC()
 {
-	_asm {
-		push	dword ptr[esp + 0xC]
-		push	dword ptr[ebx + 0x10]
+	_asm
+	{
+		push	dword ptr [esp + 0xC]
+		push	dword ptr [ebx + 0x10]
 		push	eax
 		call	AutoPilotTimerCalculation_VC
 		add 	esp, 0xC
@@ -743,7 +744,7 @@ void __declspec(naked) AutoPilotTimerFix_VC()
 		add     esp, 0x30
 		pop     ebp
 		pop     ebx
-		retn    4
+		ret     4
 	}
 }
 
@@ -863,23 +864,23 @@ namespace Localization
 // ============= Corrected FBI Washington sirens sound =============
 namespace SirenSwitchingFix
 {
-	void __declspec(naked) IsFBIRanchOrFBICar()
+	__declspec(naked) static void IsFBIRanchOrFBICar()
 	{
 		_asm
 		{
-			mov     dword ptr [esi+1Ch], 1Ch
+			mov     dword ptr [esi+0x1C], 0x1C
 
 			// al = 0 - high pitched siren
 			// al = 1 - normal siren
-			cmp     dword ptr [ebp+14h], 90		// fbiranch
+			cmp     dword ptr [ebp+0x14], 90	// fbiranch
 			je      IsFBIRanchOrFBICar_HighPitchSiren
-			cmp     dword ptr [ebp+14h], 17		// fbicar
+			cmp     dword ptr [ebp+0x14], 17	// fbicar
 			setne   al
-			retn
+			ret
 
 		IsFBIRanchOrFBICar_HighPitchSiren:
 			xor     al, al
-			retn
+			ret
 		}
 	}
 }
@@ -945,22 +946,22 @@ namespace FBISirenCoronaFix
 // ============= Fixed vehicles exploding twice if the driver leaves the car while it's exploding =============
 namespace RemoveDriverStatusFix
 {
-	__declspec(naked) void RemoveDriver_SetStatus()
+	__declspec(naked) static void RemoveDriver_SetStatus()
 	{
 		// if (m_nStatus != STATUS_WRECKED)
 		//   m_nStatus = STATUS_ABANDONED;
 		_asm
 		{
-			mov		cl, [ebx+50h]
+			mov		cl, [ebx+0x50]
 			mov		al, cl
-			and		cl, 0F8h
-			cmp		cl, 28h
+			and		cl, 0xF8
+			cmp		cl, 0x28
 			je		DontSetStatus
 			and     al, 7
-			or      al, 20h
+			or      al, 0x20
 
 		DontSetStatus:
-			retn
+			ret
 		}
 	}
 }
@@ -1038,7 +1039,7 @@ namespace NullTerminatedLines
 		{
 			mov		eax, [esp+4]
 			mov		byte ptr [eax+ecx], 0
-			jmp		[orgSscanf_LoadPath]
+			jmp		orgSscanf_LoadPath
 		}
 	}
 }
@@ -1066,9 +1067,9 @@ namespace PickupEffectsFixes
 	{
 		_asm
 		{
-			mov		byte ptr [esp+184h-170h], 0
-			mov		dword ptr [esp+184h-174h], 37
-			retn
+			mov		byte ptr [esp+0x184-0x170], 0
+			mov		dword ptr [esp+0x184-0x174], 37
+			ret
 		}
 	}
 
@@ -1078,7 +1079,7 @@ namespace PickupEffectsFixes
 		{
 			cmp		ecx, 294	// minigun2
 			jnz		NotMinigun2
-			mov		byte ptr [esp+184h-170h], 0
+			mov		byte ptr [esp+0x184-0x170], 0
 			xor		eax, eax
 			jmp		Return
 
@@ -1087,7 +1088,7 @@ namespace PickupEffectsFixes
 
 		Return:
 			mov     ebx, ecx
-			retn
+			ret
 		}
 	}
 }
@@ -1109,21 +1110,21 @@ namespace IsPlayerTargettingCharFix
 		{
 			test	bl, bl
 			jnz		ReturnToUpdateCompareFlag
-			mov		eax, [bUseMouse3rdPerson]
+			mov		eax, bUseMouse3rdPerson
 			cmp		byte ptr [eax], 0
 			jne		CmpAndReturn
-			mov		ecx, [TheCamera]
-			call	[Using1stPersonWeaponMode]
+			mov		ecx, TheCamera
+			call	Using1stPersonWeaponMode
 			test	al, al
 			jz		ReturnToUpdateCompareFlag
 
 		CmpAndReturn:
-			cmp     byte ptr [esp+11Ch-10Ch], 0
-			retn
+			cmp     byte ptr [esp+0x11C-0x10C], 0
+			ret
 
 		ReturnToUpdateCompareFlag:
 			xor		al, al
-			retn
+			ret
 		}
 	}
 }
@@ -1214,8 +1215,8 @@ namespace SelectableBackfaceCulling
 		{
 			push    ebx
 			mov     ebx, ecx
-			cmp     dword ptr [ebx+4Ch], 0
-			jmp		[EntityRender_Prologue_JumpBack]
+			cmp     dword ptr [ebx+0x4C], 0
+			jmp		EntityRender_Prologue_JumpBack
 		}
 	}
 
@@ -1390,7 +1391,7 @@ namespace TommyFistShakeWithWeapons
 		return !bWeaponAllowsFistShake;
 	}
 
-	static __declspec(naked) void CheckWeaponGroupHook()
+	__declspec(naked) static void CheckWeaponGroupHook()
 	{
 		_asm
 		{
@@ -1398,7 +1399,7 @@ namespace TommyFistShakeWithWeapons
 			call	WeaponProhibitsFistShake
 			add		esp, 4
 			test	al, al
-			retn
+			ret
 		}
 	}
 
