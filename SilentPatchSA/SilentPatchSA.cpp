@@ -1655,7 +1655,7 @@ namespace HierarchyTypoFix
 		{ "wheel_lm_dummy", "wheel_lm" },
 	};
 	static int (*orgStrcasecmp)(const char*, const char*);
-	int strcasecmp( const char* dataName, const char* nodeName )
+	int strcasecomp( const char* dataName, const char* nodeName )
 	{
 		/*assert( std::is_sorted(std::begin(typosAndFixes), std::end(typosAndFixes), [] (const auto& a, const auto& b) {
 			return _stricmp( a.second, b.second ) < 0;
@@ -5950,7 +5950,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	{
 		using namespace HierarchyTypoFix;
 
-		InterceptCall(0x4C5311, orgStrcasecmp, strcasecmp);
+		InterceptCall(0x4C5311, orgStrcasecmp, strcasecomp);
 	}
 
 
