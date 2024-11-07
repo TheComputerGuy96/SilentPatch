@@ -1602,9 +1602,9 @@ namespace FirelaHook
 	static uintptr_t UpdateMovingCollisionJmp;
 	static uintptr_t HydraulicControlJmpBack;
 
-	void __declspec(naked) TestFirelaAndFlags()
+	__declspec(naked) static void TestFirelaAndFlags()
 	{
-		__asm
+		_asm
 		{
 			push	ecx		// Required in 0x6B1FE4: test cl, cl
 			mov		ecx, esi
@@ -1613,29 +1613,29 @@ namespace FirelaHook
 			test	al, al
 			jnz		TestFirelaAndFlags_UpdateMovingCollision
 			test	[esi].hFlagsLocal, FLAG_HYDRAULICS_INSTALLED
-			jmp		[HydraulicControlJmpBack]
+			jmp		HydraulicControlJmpBack
 
-TestFirelaAndFlags_UpdateMovingCollision:
-			jmp		[UpdateMovingCollisionJmp]
+		TestFirelaAndFlags_UpdateMovingCollision:
+			jmp		UpdateMovingCollisionJmp
 		}
 	}
 
 	static uintptr_t FollowCarCamNoMovement;
 	static uintptr_t FollowCarCamJmpBack;
 
-	void __declspec(naked) CamControlFirela()
+	__declspec(naked) static void CamControlFirela()
 	{
-		__asm
+		_asm
 		{
 			mov		ecx, edi
 			call	CVehicle::HasFirelaLadder
 			test	al, al
 			jnz		TestFirelaAndFlags_UpdateMovingCollision
 			mov		eax, [edi].m_dwVehicleClass
-			jmp		[FollowCarCamJmpBack]
+			jmp		FollowCarCamJmpBack
 
-			TestFirelaAndFlags_UpdateMovingCollision:
-			jmp		[FollowCarCamNoMovement]
+		TestFirelaAndFlags_UpdateMovingCollision:
+			jmp		FollowCarCamNoMovement
 		}
 	}
 }
@@ -1857,25 +1857,25 @@ namespace TrueInvincibility
 	static bool isEnabled = false;
 	static uintptr_t WillKillJumpBack;
 
-	void __declspec(naked) ComputeWillKillPedHook()
+	__declspec(naked) static void ComputeWillKillPedHook()
 	{
 		_asm
 		{
-			cmp		dword ptr [ebp+0Ch], WEAPONTYPE_LAST_WEAPONTYPE
+			cmp		dword ptr [ebp+0xC], WEAPONTYPE_LAST_WEAPONTYPE
 			jl		ComputeWillKillPedHook_DoNotKill
-			cmp		[isEnabled], 0
+			cmp		isEnabled, 0
 			je		ComputeWillKillPedHook_Kill
-			cmp		dword ptr [ebp+0Ch], WEAPONTYPE_UZI_DRIVEBY
+			cmp		dword ptr [ebp+0xC], WEAPONTYPE_UZI_DRIVEBY
 			jne		ComputeWillKillPedHook_Kill
 
 		ComputeWillKillPedHook_DoNotKill:
 			pop     esi
 			pop     ebp
 			pop     ebx
-			retn    0Ch
+			ret    	0xC
 
 		ComputeWillKillPedHook_Kill:
-			jmp		[WillKillJumpBack]
+			jmp		WillKillJumpBack
 		}
 	}
 }
@@ -2035,66 +2035,66 @@ namespace QuadbikeHandlebarAnims
 {
 	static const float POW_CONSTANT = 0.86f;
 	static const float SLOW_SPEED_THRESHOLD = 0.02f;
-	__declspec(naked) void ProcessRiderAnims_FixInterp()
+	__declspec(naked) static void ProcessRiderAnims_FixInterp()
 	{
 		_asm
 		{
 			xor		edx, edx
-			cmp     [esp+130h-100h], edx // Reverse animation
+			cmp     [esp+0x130-0x100], edx // Reverse animation
 			jne		FuncSetToZero
-			cmp     [esp+130h-0F8h], edx // Drive-by animation
+			cmp     [esp+0x130-0xF8], edx // Drive-by animation
 			jne		FuncSetToZero
-			fld     dword ptr [esp+130h-108h]
+			fld     dword ptr [esp+0x130-0x108]
 			fabs
-			fcomp	[SLOW_SPEED_THRESHOLD]
+			fcomp	SLOW_SPEED_THRESHOLD
 			fnstsw  ax
 			test    ah, 5
 			jp		FuncReturn
 
 		FuncSetToZero:
-			mov		[esp+130h-118h], edx
+			mov		[esp+0x130-0x118], edx
 
 		FuncReturn:
-			fld		[POW_CONSTANT]
-			retn
+			fld		POW_CONSTANT
+			ret
 		}
 	}
 
 	static uint32_t savedClumpAssociation;
-	__declspec(naked) void SaveDriveByAnim_Steam()
+	__declspec(naked) static void SaveDriveByAnim_Steam()
 	{
 		_asm
 		{
-			mov		eax, [ebp-14h]
-			mov		[savedClumpAssociation], eax
-			fdiv    dword ptr [ecx+18h]
-			fstp	[ebp-14h]
-			retn
+			mov		eax, [ebp-0x14]
+			mov		savedClumpAssociation, eax
+			fdiv    dword ptr [ecx+0x18]
+			fstp	dword ptr [ebp-0x14]
+			ret
 		}
 	}
 
-	__declspec(naked) void ProcessRiderAnims_FixInterp_Steam()
+	__declspec(naked) static void ProcessRiderAnims_FixInterp_Steam()
 	{
 		_asm
 		{
 			xor		edx, edx
-			cmp		[ebp-28h], edx // Reverse animation
+			cmp		[ebp-0x28], edx // Reverse animation
 			jne		FuncSetToZero
-			cmp		[savedClumpAssociation], edx // Drive-by animation
+			cmp		savedClumpAssociation, edx // Drive-by animation
 			jne		FuncSetToZero
-			fld     dword ptr [ebp-24h]
+			fld     dword ptr [ebp-0x24]
 			fabs
-			fcomp	[SLOW_SPEED_THRESHOLD]
+			fcomp	SLOW_SPEED_THRESHOLD
 			fnstsw  ax
 			test    ah, 5
 			jp		FuncReturn
 
 		FuncSetToZero:
-			mov		[ebp-14h], edx
+			mov		[ebp-0x14], edx
 
 		FuncReturn:
 			fld		[POW_CONSTANT]
-			retn
+			ret
 		}
 	}
 
@@ -2119,31 +2119,31 @@ namespace UprightBoatRadioStationChange
 // ============= Fix a memory leak when taking photos =============
 namespace CameraMemoryLeakFix
 {
-	__declspec(naked) void psGrabScreen_UnlockAndReleaseSurface()
+	__declspec(naked) static void psGrabScreen_UnlockAndReleaseSurface()
 	{
 		_asm
 		{
 			// Preserve the function result so we don't need two ASM hooks
 			push	eax
 
-			mov		eax, [esp+34h-2Ch]
+			mov		eax, [esp+0x34-0x2C]
 			mov		edx, [eax]
 			push	eax
-			call	dword ptr [edx+38h] // IDirect3DSurface9.UnlockRect
+			call	dword ptr [edx+0x38] // IDirect3DSurface9.UnlockRect
 
-			mov		eax, [esp+34h-2Ch]
+			mov		eax, [esp+0x34-0x2C]
 			mov		edx, [eax]
 			push	eax
-			call	dword ptr [edx+8h] // IDirect3DSurface9.Release
+			call	dword ptr [edx+0x8] // IDirect3DSurface9.Release
 
 			pop		eax
 			pop		ebp
-			add		esp, 2Ch
+			add		esp, 0x2C
 			retn
 		}
 	}
 
-	__declspec(naked) void psGrabScreen_UnlockAndReleaseSurface_Steam()
+	__declspec(naked) static void psGrabScreen_UnlockAndReleaseSurface_Steam()
 	{
 		_asm
 		{
@@ -2153,18 +2153,18 @@ namespace CameraMemoryLeakFix
 			mov		eax, [ebp-4]
 			mov		edx, [eax]
 			push	eax
-			call	dword ptr [edx+38h] // IDirect3DSurface9.UnlockRect
+			call	dword ptr [edx+0x38] // IDirect3DSurface9.UnlockRect
 
 			mov		eax, [ebp-4]
 			mov		edx, [eax]
 			push	eax
-			call	dword ptr [edx+8h] // IDirect3DSurface9.Release
+			call	dword ptr [edx+0x8] // IDirect3DSurface9.Release
 
 			pop		eax
 			pop		esi
 			mov		esp, ebp
 			pop		ebp
-			retn
+			ret
 		}
 	}
 }
@@ -2231,67 +2231,67 @@ namespace RacingCheckpointsRender
 // ============= Correct an improperly decrypted CPlayerPedData::operator= that broke gang recruiting after activating replays =============
 namespace PlayerPedDataAssignment
 {
-	__declspec(naked) void AssignmentOp_Hoodlum()
+	__declspec(naked) static void AssignmentOp_Hoodlum()
 	{
 		_asm
 		{
-			xor     edx, [ecx+34h]
+			xor     edx, [ecx+0x34]
 			and     edx, 1
-			xor     [eax+34h], edx
-			mov     esi, [eax+34h]
-			mov     edx, [ecx+34h]
+			xor     [eax+0x34], edx
+			mov     esi, [eax+0x34]
+			mov     edx, [ecx+0x34]
 			xor     edx, esi
 			and     edx, 2
 			xor     edx, esi
-			mov     [eax+34h], edx
-			mov     esi, [ecx+34h]
+			mov     [eax+0x34], edx
+			mov     esi, [ecx+0x34]
 			xor     esi, edx
 			and     esi, 4
 			xor     esi, edx
-			mov     [eax+34h], esi
-			mov     edx, [ecx+34h]
+			mov     [eax+0x34], esi
+			mov     edx, [ecx+0x34]
 			xor     edx, esi
 			and     edx, 8
 			xor     edx, esi
-			mov     [eax+34h], edx
-			mov     esi, [ecx+34h]
+			mov     [eax+0x34], edx
+			mov     esi, [ecx+0x34]
 			xor     esi, edx
-			and     esi, 10h
+			and     esi, 0x10
 			xor     esi, edx
-			mov     [eax+34h], esi
-			mov     edx, [ecx+34h]
+			mov     [eax+0x34], esi
+			mov     edx, [ecx+0x34]
 			xor     edx, esi
-			and     edx, 20h
+			and     edx, 0x20
 			xor     edx, esi
-			mov     [eax+34h], edx
-			mov     esi, [ecx+34h]
+			mov     [eax+0x34], edx
+			mov     esi, [ecx+0x34]
 			xor     esi, edx
-			and     esi, 40h
+			and     esi, 0x40
 			xor     esi, edx
-			mov     [eax+34h], esi
-			mov     edx, [ecx+34h]
+			mov     [eax+0x34], esi
+			mov     edx, [ecx+0x34]
 			xor     edx, esi
-			and     edx, 80h
+			and     edx, 0x80
 			xor     edx, esi
-			mov     [eax+34h], edx
-			mov     esi, [ecx+34h]
+			mov     [eax+0x34], edx
+			mov     esi, [ecx+0x34]
 			xor     esi, edx
-			and     esi, 100h
+			and     esi, 0x100
 			xor     esi, edx
-			mov     [eax+34h], esi
-			mov     edx, [ecx+34h]
-			retn
+			mov     [eax+0x34], esi
+			mov     edx, [ecx+0x34]
+			ret
 		}
 	}
 
-	__declspec(naked) void AssignmentOp_Compact()
+	__declspec(naked) static void AssignmentOp_Compact()
 	{
 		_asm
 		{
 			call	AssignmentOp_Hoodlum
 			xor     edx, esi
-			and     edx, 200h
-			retn
+			and     edx, 0x200
+			ret
 		}
 	}
 }
@@ -2300,7 +2300,7 @@ namespace PlayerPedDataAssignment
 // ============= Spawn lapdm1 (biker cop) correctly if the script requests one with PEDTYPE_COP =============
 namespace GetCorrectPedModel_Lapdm1
 {
-	__declspec(naked) void BikerCop_Retail()
+	__declspec(naked) static void BikerCop_Retail()
 	{
 		_asm
 		{
@@ -2309,11 +2309,11 @@ namespace GetCorrectPedModel_Lapdm1
 			mov		dword ptr [eax], 1
 
 		BikerCop_Return:
-			retn	8
+			ret		8
 		}
 	}
 
-	__declspec(naked) void BikerCop_Steam()
+	__declspec(naked) static void BikerCop_Steam()
 	{
 		_asm
 		{
@@ -2323,7 +2323,7 @@ namespace GetCorrectPedModel_Lapdm1
 
 		BikerCop_Return:
 			pop		ebp
-			retn	8
+			ret		8
 		}
 	}
 }
@@ -2444,7 +2444,7 @@ namespace JetpackKeyboardControlsHover
 	static void* ProcessControlInput_DontHover;
 	static void* ProcessControlInput_Hover;
 
-	__declspec(naked) void ProcessControlInput_HoverWithKeyboard()
+	__declspec(naked) static void ProcessControlInput_HoverWithKeyboard()
 	{
 		_asm
 		{
@@ -2453,7 +2453,7 @@ namespace JetpackKeyboardControlsHover
 			test	al, al
 			jnz		Hovering
 			mov		ecx, ebp
-			mov		byte ptr [esi+0Dh], 0
+			mov		byte ptr [esi+0xD], 0
 			jmp		ProcessControlInput_DontHover
 
 		Hovering:
@@ -2461,7 +2461,7 @@ namespace JetpackKeyboardControlsHover
 		}
 	}
 
-	__declspec(naked) void ProcessControlInput_HoverWithKeyboard_Steam()
+	__declspec(naked) static void ProcessControlInput_HoverWithKeyboard_Steam()
 	{
 		_asm
 		{
@@ -2470,10 +2470,10 @@ namespace JetpackKeyboardControlsHover
 			test	al, al
 			jnz		Hovering
 			mov		ecx, ebx
-			mov		byte ptr [edi+0Dh], 0
+			mov		byte ptr [edi+0xD], 0
 			jmp		ProcessControlInput_DontHover
 
-			Hovering:
+		Hovering:
 			jmp		ProcessControlInput_Hover
 		}
 	}
@@ -2487,11 +2487,11 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 	static void* SkipTargetting;
 	static void* DontSkipTargetting;
 
-	__declspec(naked) void CheckIfInPlayerGroupAndOnAMission()
+	__declspec(naked) static void CheckIfInPlayerGroupAndOnAMission()
 	{
 		_asm
 		{
-			cmp     byte ptr [ebp+2D0h], 1
+			cmp     byte ptr [ebp+0x2D0], 1
 			jne		NotInGroup
 			call	IsPlayerOnAMission
 			test	al, al
@@ -2499,18 +2499,18 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 			jmp		SkipTargetting
 
 		NotOnAMission:
-			cmp     byte ptr [ebp+2D0h], 1
+			cmp     byte ptr [ebp+0x2D0], 1
 
 		NotInGroup:
 			jmp		DontSkipTargetting
 		}
 	}
 
-	__declspec(naked) void CheckIfInPlayerGroupAndOnAMission_Steam()
+	__declspec(naked) static void CheckIfInPlayerGroupAndOnAMission_Steam()
 	{
 		_asm
 		{
-			cmp     byte ptr [ebx+2D0h], 1
+			cmp     byte ptr [ebx+0x2D0], 1
 			jne		NotInGroup
 			call	IsPlayerOnAMission
 			test	al, al
@@ -2518,7 +2518,7 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 			jmp		SkipTargetting
 
 		NotOnAMission:
-			cmp     byte ptr [ebx+2D0h], 1
+			cmp     byte ptr [ebx+0x2D0], 1
 
 		NotInGroup:
 			jmp		DontSkipTargetting
