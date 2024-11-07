@@ -3885,30 +3885,30 @@ static bool			bDarkVehicleThing;
 static RpLight**	pDirect;
 
 static void* DarkVehiclesFix1_JumpBack;
-void __declspec(naked) DarkVehiclesFix1()
+ __declspec(naked) void DarkVehiclesFix1()
 {
 	_asm
 	{
-		shr     eax, 0Eh
+		shr     eax, 0xE
 		test	al, 1
-		jz		DarkVehiclesFix1_DontAppply
-		mov		ecx, [pDirect]
+		jz		DarkVehiclesFix1_DontApply
+		mov		ecx, pDirect
 		mov		ecx, [ecx]
 		mov		al, [ecx+2]
 		test	al, 1
-		jnz		DarkVehiclesFix1_DontAppply
+		jnz		DarkVehiclesFix1_DontApply
 		mov		bDarkVehicleThing, 1
 		jmp		DarkVehiclesFix1_Return
 
-DarkVehiclesFix1_DontAppply:
+	DarkVehiclesFix1_DontApply:
 		mov		bDarkVehicleThing, 0
 
-DarkVehiclesFix1_Return:
+	DarkVehiclesFix1_Return:
 		jmp		DarkVehiclesFix1_JumpBack
 	}
 }
 
-void __declspec(naked) DarkVehiclesFix2()
+__declspec(naked) void DarkVehiclesFix2()
 {
 	_asm
 	{
@@ -3916,16 +3916,16 @@ void __declspec(naked) DarkVehiclesFix2()
 		mov		al, bDarkVehicleThing
 		test	al, al
 		jnz		DarkVehiclesFix2_MakeItDark
-		mov		eax, 5D9A7Ah
+		mov		eax, 0x5D9A7A
 		jmp		eax
 
-DarkVehiclesFix2_MakeItDark:
-		mov		eax, 5D9B09h
+	DarkVehiclesFix2_MakeItDark:
+		mov		eax, 0x5D9B09
 		jmp		eax
 	}
 }
 
-void __declspec(naked) DarkVehiclesFix3()
+__declspec(naked) void DarkVehiclesFix3()
 {
 	_asm
 	{
@@ -3933,16 +3933,16 @@ void __declspec(naked) DarkVehiclesFix3()
 		mov		al, bDarkVehicleThing
 		test	al, al
 		jnz		DarkVehiclesFix3_MakeItDark
-		mov		eax, 5D9B4Ah
+		mov		eax, 0x5D9B4A
 		jmp		eax
 
-DarkVehiclesFix3_MakeItDark:
-		mov		eax, 5D9CACh
+	DarkVehiclesFix3_MakeItDark:
+		mov		eax, 0x5D9CAC
 		jmp		eax
 	}
 }
 
-void __declspec(naked) DarkVehiclesFix4()
+__declspec(naked) void DarkVehiclesFix4()
 {
 	_asm
 	{
@@ -3950,11 +3950,11 @@ void __declspec(naked) DarkVehiclesFix4()
 		mov		al, bDarkVehicleThing
 		test	al, al
 		jnz		DarkVehiclesFix4_MakeItDark
-		mov		eax, 5D9CB8h
+		mov		eax, 0x5D9CB8
 		jmp		eax
 
-DarkVehiclesFix4_MakeItDark:
-		mov		eax, 5D9E0Dh
+	DarkVehiclesFix4_MakeItDark:
+		mov		eax, 0x5D9E0D
 		jmp		eax
 	}
 }
@@ -3991,108 +3991,108 @@ int __stdcall Timers_ftol_SCMdelta( double timer )
 	return _Timers_ftol_internal( timer, TimersRemainder );
 }
 
-void __declspec(naked) asmTimers_ftol_PauseMode()
+__declspec(naked) void asmTimers_ftol_PauseMode()
 {
 	_asm
 	{
 		sub		esp, 8
 		fstp	qword ptr [esp]
 		call	Timers_ftol_PauseMode
-		retn
+		ret
 	}
 }
 
-void __declspec(naked) asmTimers_ftol_NonClipped()
+__declspec(naked) void asmTimers_ftol_NonClipped()
 {
 	_asm
 	{
 		sub		esp, 8
 		fstp	qword ptr [esp]
 		call	Timers_ftol_NonClipped
-		retn
+		ret
 	}
 }
 
-void __declspec(naked) asmTimers_ftol()
+__declspec(naked) void asmTimers_ftol()
 {
 	_asm
 	{
 		sub		esp, 8
 		fstp	qword ptr [esp]
 		call	Timers_ftol
-		retn
+		ret
 	}
 }
 
-void __declspec(naked) asmTimers_SCMdelta()
+__declspec(naked) void asmTimers_SCMdelta()
 {
 	_asm
 	{
 		sub		esp, 8
 		fstp	qword ptr [esp]
 		call	Timers_ftol_SCMdelta
-		retn
+		ret
 	}
 }
 
-void _declspec(naked) FixedCarDamage()
+__declspec(naked) void FixedCarDamage()
 {
 	_asm
 	{
 		fldz
-		fcomp	[esp+20h+10h]
+		fcomp	dword ptr [esp+0x20+0x10]
 		fnstsw  ax
 		test    ah, 5
 		jp		FixedCarDamage_Negative
-		movzx   eax, byte ptr [edi+21h]
-		retn
+		movzx   eax, byte ptr [edi+0x21]
+		ret
 
-FixedCarDamage_Negative:
-		movzx   eax, byte ptr [edi+24h]
-		retn
+	FixedCarDamage_Negative:
+		movzx   eax, byte ptr [edi+0x24]
+		ret
 	}
 }
 
-void _declspec(naked) FixedCarDamage_Steam()
+__declspec(naked) void FixedCarDamage_Steam()
 {
 	_asm
 	{
 		fldz
-		fcomp	[esp+20h+10h]
+		fcomp	dword ptr [esp+0x20+0x10]
 		fnstsw  ax
 		test    ah, 5
 		jp		FixedCarDamage_Negative
-		movzx   eax, byte ptr [edi+21h]
+		movzx   eax, byte ptr [edi+0x21]
 		test	ecx, ecx
-		retn
+		ret
 
-FixedCarDamage_Negative:
-		movzx   eax, byte ptr [edi+24h]
+	FixedCarDamage_Negative:
+		movzx   eax, byte ptr [edi+0x24]
 		test	ecx, ecx
-		retn
+		ret
 	}
 }
 
-void _declspec(naked) FixedCarDamage_Newsteam()
+__declspec(naked) void FixedCarDamage_Newsteam()
 {
 	_asm
 	{
-		mov		edi, [ebp+10h]
+		mov		edi, [ebp+0x10]
 		fldz
-		fcomp	[ebp+14h]
+		fcomp	[ebp+0x14]
 		fnstsw  ax
 		test    ah, 5
 		jp		FixedCarDamage_Negative
-		movzx   eax, byte ptr [edi+21h]
-		retn
+		movzx   eax, byte ptr [edi+0x21]
+		ret
 
-FixedCarDamage_Negative:
-		movzx   eax, byte ptr [edi+24h]
-		retn
+	FixedCarDamage_Negative:
+		movzx   eax, byte ptr [edi+0x24]
+		ret
 	}
 }
 
-void __declspec(naked) CdStreamThreadHighSize()
+__declspec(naked) void CdStreamThreadHighSize()
 {
 	_asm
 	{
@@ -4103,11 +4103,11 @@ void __declspec(naked) CdStreamThreadHighSize()
 		mov		[esi]CdStream.overlapped.OffsetHigh, edx // OVERLAPPED.OffsetHigh
 
 		mov		edx, [esi]CdStream.nSectorsToRead
-		retn
+		ret
 	}
 }
 
-void __declspec(naked) WeaponRangeMult_VehicleCheck()
+__declspec(naked) void WeaponRangeMult_VehicleCheck()
 {
 	_asm
 	{
@@ -4115,11 +4115,11 @@ void __declspec(naked) WeaponRangeMult_VehicleCheck()
 		test    ah, 1
 		jz		WeaponRangeMult_VehicleCheck_NotInCar
 		mov		eax, [edx]CPed.pVehicle
-		retn
+		ret
 	
-WeaponRangeMult_VehicleCheck_NotInCar:
+	WeaponRangeMult_VehicleCheck_NotInCar:
 		xor		eax, eax
-		retn
+		ret
 	}
 }
 
