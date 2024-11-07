@@ -7826,7 +7826,7 @@ void Patch_SA_Steam()
 	// User Tracks fix
 	SetVolume = reinterpret_cast<decltype(SetVolume)>(0x4E2750);
 	Patch<BYTE>(0x4E4A28, 0xBA);
-	Patch<const void*>(0x4E4A29, UserTracksFix_Steam);
+	Patch<const void*>(0x4E4A29, reinterpret_cast<const void*>(UserTracksFix_Steam));
 	InjectHook(0x4E4A8B, 0x4FF2B0);
 
 	// FLAC support
