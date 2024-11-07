@@ -4715,6 +4715,7 @@ static RpLight**	pDirect;
 static void* DarkVehiclesFix1_JumpBack;
  __declspec(naked) void DarkVehiclesFix1()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		shr     eax, 0xE
@@ -4734,10 +4735,35 @@ static void* DarkVehiclesFix1_JumpBack;
 	DarkVehiclesFix1_Return:
 		jmp		DarkVehiclesFix1_JumpBack
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"shr    eax, 0xE\n"
+		"test	al, 1\n"
+		"jz		DarkVehiclesFix1_DontApply\n"
+		"mov	ecx, %[pDirect]\n"
+		"mov	ecx, [ecx]\n"
+		"mov	al, [ecx+2]\n"
+		"test	al, 1\n"
+		"jnz	DarkVehiclesFix1_DontApply\n"
+		"mov	%[bDarkVehicleThing], 1\n"
+		"jmp	DarkVehiclesFix1_Return\n"
+
+	"DarkVehiclesFix1_DontApply:\n"
+		"mov	%[bDarkVehicleThing], 0\n"
+
+	"DarkVehiclesFix1_Return:\n"
+		"jmp	%[DarkVehiclesFix1_JumpBack]"
+		: [bDarkVehicleThing] "=m" (bDarkVehicleThing)
+		: [pDirect] "m" (pDirect),
+		[DarkVehiclesFix1_JumpBack] "m" (DarkVehiclesFix1_JumpBack)
+	);
+#endif
 }
 
 __declspec(naked) void DarkVehiclesFix2()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		DarkVehiclesFix2_MakeItDark
@@ -4751,10 +4777,27 @@ __declspec(naked) void DarkVehiclesFix2()
 		mov		eax, 0x5D9B09
 		jmp		eax
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		DarkVehiclesFix2_MakeItDark\n"
+		"mov	al, %[bDarkVehicleThing]\n"
+		"test	al, al\n"
+		"jnz	DarkVehiclesFix2_MakeItDark\n"
+		"mov	eax, 0x5D9A7A\n"
+		"jmp	eax\n"
+
+	"DarkVehiclesFix2_MakeItDark:\n"
+		"mov	eax, 0x5D9B09\n"
+		"jmp	eax"
+		:: [bDarkVehicleThing] "m" (bDarkVehicleThing)
+	);
+#endif
 }
 
 __declspec(naked) void DarkVehiclesFix3()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		DarkVehiclesFix3_MakeItDark
@@ -4768,10 +4811,27 @@ __declspec(naked) void DarkVehiclesFix3()
 		mov		eax, 0x5D9CAC
 		jmp		eax
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		DarkVehiclesFix3_MakeItDark\n"
+		"mov	al, %[bDarkVehicleThing]\n"
+		"test	al, al\n"
+		"jnz	DarkVehiclesFix3_MakeItDark\n"
+		"mov	eax, 0x5D9B4A\n"
+		"jmp	eax\n"
+
+	"DarkVehiclesFix3_MakeItDark:\n"
+		"mov	eax, 0x5D9CAC\n"
+		"jmp	eax"
+		:: [bDarkVehicleThing] "m" (bDarkVehicleThing)
+	);
+#endif
 }
 
 __declspec(naked) void DarkVehiclesFix4()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		DarkVehiclesFix4_MakeItDark
@@ -4785,6 +4845,22 @@ __declspec(naked) void DarkVehiclesFix4()
 		mov		eax, 0x5D9E0D
 		jmp		eax
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		DarkVehiclesFix4_MakeItDark\n"
+		"mov	al, %[bDarkVehicleThing]\n"
+		"test	al, al\n"
+		"jnz	DarkVehiclesFix4_MakeItDark\n"
+		"mov	eax, 0x5D9CB8\n"
+		"jmp	eax\n"
+
+	"DarkVehiclesFix4_MakeItDark:\n"
+		"mov	eax, 0x5D9E0D\n"
+		"jmp	eax"
+		:: [bDarkVehicleThing] "m" (bDarkVehicleThing)
+	);
+#endif
 }
 // 1.0 ONLY ENDS HERE
 
@@ -4821,6 +4897,7 @@ int __stdcall Timers_ftol_SCMdelta( double timer )
 
 __declspec(naked) void asmTimers_ftol_PauseMode()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		sub		esp, 8
@@ -4828,10 +4905,21 @@ __declspec(naked) void asmTimers_ftol_PauseMode()
 		call	Timers_ftol_PauseMode
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"sub	esp, 8\n"
+		"fstp	qword ptr [esp]\n"
+		"call	%[Timers_ftol_PauseMode]\n"
+		"ret"
+		:: [Timers_ftol_PauseMode] "i" (Timers_ftol_PauseMode)
+	);
+#endif
 }
 
 __declspec(naked) void asmTimers_ftol_NonClipped()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		sub		esp, 8
@@ -4839,10 +4927,21 @@ __declspec(naked) void asmTimers_ftol_NonClipped()
 		call	Timers_ftol_NonClipped
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"sub	esp, 8\n"
+		"fstp	qword ptr [esp]\n"
+		"call	%[Timers_ftol_NonClipped]\n"
+		"ret"
+		:: [Timers_ftol_NonClipped] "i" (Timers_ftol_NonClipped)
+	);
+#endif
 }
 
 __declspec(naked) void asmTimers_ftol()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		sub		esp, 8
@@ -4850,10 +4949,21 @@ __declspec(naked) void asmTimers_ftol()
 		call	Timers_ftol
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"sub	esp, 8\n"
+		"fstp	qword ptr [esp]\n"
+		"call	%[Timers_ftol]\n"
+		"ret"
+		:: [Timers_ftol] "i" (Timers_ftol)
+	);
+#endif
 }
 
 __declspec(naked) void asmTimers_SCMdelta()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		sub		esp, 8
@@ -4861,10 +4971,21 @@ __declspec(naked) void asmTimers_SCMdelta()
 		call	Timers_ftol_SCMdelta
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"sub	esp, 8\n"
+		"fstp	qword ptr [esp]\n"
+		"call	%[Timers_ftol_SCMdelta]\n"
+		"ret"
+		:: [Timers_ftol_SCMdelta] "i" (Timers_ftol_SCMdelta)
+	);
+#endif
 }
 
 __declspec(naked) void FixedCarDamage()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		fldz
@@ -4879,10 +5000,27 @@ __declspec(naked) void FixedCarDamage()
 		movzx   eax, byte ptr [edi+0x24]
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"fldz\n"
+		"fcomp	dword ptr [esp+0x20+0x10]\n"
+		"fnstsw ax\n"
+		"test   ah, 5\n"
+		"jp		FixedCarDamage_Negative\n"
+		"movzx  eax, byte ptr [edi+0x21]\n"
+		"ret\n"
+
+	"FixedCarDamage_Negative:\n"
+		"movzx  eax, byte ptr [edi+0x24]\n"
+		"ret"
+	);
+#endif
 }
 
 __declspec(naked) void FixedCarDamage_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		fldz
@@ -4899,10 +5037,29 @@ __declspec(naked) void FixedCarDamage_Steam()
 		test	ecx, ecx
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"fldz\n"
+		"fcomp	dword ptr [esp+0x20+0x10]\n"
+		"fnstsw ax\n"
+		"test   ah, 5\n"
+		"jp		FixedCarDamage_Negative2\n"
+		"movzx  eax, byte ptr [edi+0x21]\n"
+		"test	ecx, ecx\n"
+		"ret\n"
+
+	"FixedCarDamage_Negative2:\n"
+		"movzx  eax, byte ptr [edi+0x24]\n"
+		"test	ecx, ecx\n"
+		"ret"
+	);
+#endif
 }
 
 __declspec(naked) void FixedCarDamage_Newsteam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov		edi, [ebp+0x10]
@@ -4918,10 +5075,28 @@ __declspec(naked) void FixedCarDamage_Newsteam()
 		movzx   eax, byte ptr [edi+0x24]
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov	edi, [ebp+0x10]\n"
+		"fldz\n"
+		"fcomp	dword ptr [ebp+0x14]\n"
+		"fnstsw ax\n"
+		"test   ah, 5\n"
+		"jp		FixedCarDamage_Negative3\n"
+		"movzx  eax, byte ptr [edi+0x21]\n"
+		"ret\n"
+
+	"FixedCarDamage_Negative3:\n"
+		"movzx  eax, byte ptr [edi+0x24]\n"
+		"ret"
+	);
+#endif
 }
 
 __declspec(naked) void CdStreamThreadHighSize()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		xor		edx, edx
@@ -4933,10 +5108,37 @@ __declspec(naked) void CdStreamThreadHighSize()
 		mov		edx, [esi]CdStream.nSectorsToRead
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"xor	edx, edx\n"
+		"shld	edx, ecx, 11\n"
+		"shl	ecx, 11\n"
+		"mov	[esi+%[overlapped_Offset]], ecx\n" // OVERLAPPED.Offset
+		"mov	[esi+%[overlapped_OffsetHigh]], edx\n" // OVERLAPPED.OffsetHigh
+
+		"mov	edx, [esi+%[nSectorsToRead]]\n"
+		"ret"
+		:: [overlapped_Offset] "i" (offsetof(struct CdStream, overlapped.Offset)),
+		[overlapped_OffsetHigh] "i" (offsetof(struct CdStream, overlapped.OffsetHigh)),
+		[nSectorsToRead] "i" (offsetof(struct CdStream, nSectorsToRead))
+	);
+#endif
+}
+
+CPedFlags __thiscall CPed_pedFlags(CPed* ped)
+{
+	return ped->pedFlags;
+}
+
+CVehicle* __thiscall CPed_pVehicle(CPed* ped)
+{
+	return ped->pVehicle;
 }
 
 __declspec(naked) void WeaponRangeMult_VehicleCheck()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov		eax, [edx]CPed.pedFlags
@@ -4949,6 +5151,26 @@ __declspec(naked) void WeaponRangeMult_VehicleCheck()
 		xor		eax, eax
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"push	ecx\n"
+		"mov	ecx, edx\n"
+		"call	%[CPed_pedFlags]\n"
+		"test   ah, 1\n"
+		"jz		WeaponRangeMult_VehicleCheck_NotInCar\n"
+		"call	%[CPed_pVehicle]\n"
+		"pop	ecx\n"
+		"ret\n"
+
+	"WeaponRangeMult_VehicleCheck_NotInCar:\n"
+		"pop	ecx\n"
+		"xor	eax, eax\n"
+		"ret"
+		:: [CPed_pedFlags] "i" (CPed_pedFlags),
+		[CPed_pVehicle] "i" (CPed_pVehicle)
+	);
+#endif
 }
 
 
