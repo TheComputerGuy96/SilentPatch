@@ -1,6 +1,7 @@
 #ifndef __GENERAL
 #define __GENERAL
 
+#include <functional>
 #include <stdint.h>
 #include "Common.h"
 #include "TheFLAUtils.h"
