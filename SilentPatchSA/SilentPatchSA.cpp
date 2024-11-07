@@ -2530,22 +2530,22 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 // ============= Fixed vehicles exploding twice if the driver leaves the car while it's exploding =============
 namespace RemoveDriverStatusFix
 {
-	__declspec(naked) void RemoveDriver_SetStatus()
+	__declspec(naked) static void RemoveDriver_SetStatus()
 	{
 		// if (m_nStatus != STATUS_WRECKED)
 		//   m_nStatus = STATUS_ABANDONED;
 		_asm
 		{
-			mov		bl, [edi+36h]
+			mov		bl, [edi+0x36]
 			mov		al, bl
-			and		bl, 0F8h
-			cmp		bl, 28h
+			and		bl, 0xF8
+			cmp		bl, 0x28
 			je		DontSetStatus
 			and     al, 7
-			or      al, 20h
+			or      al, 0x20
 
 		DontSetStatus:
-			retn
+			ret
 		}
 	}
 
@@ -3028,35 +3028,35 @@ namespace CrosshairScalingFixes
 // Debugged by Wesser
 namespace MapScreenScalingFixes
 {	
-	void __declspec(naked) ScaleX_NewBinaries()
+	__declspec(naked) void ScaleX_NewBinaries()
 	{
 		_asm
 		{
 			push	ecx
-			push	3F800000h // 1.0f
+			push	0x3F800000 // 1.0f
 			call	[ScaleX]
 			add		esp, 4
 
 			fsub    st(1), st
 			fxch    st(1)
 			pop		ecx
-			retn
+			ret
 		}
 	}
 
-	void __declspec(naked) ScaleY_NewBinaries()
+	__declspec(naked) void ScaleY_NewBinaries()
 	{
 		_asm
 		{
 			push	ecx
-			push	3F800000h // 1.0f
+			push	0x3F800000 // 1.0f
 			call	[ScaleY]
 			add		esp, 4
 
 			fsub    st(1), st
 			fxch    st(1)
 			pop		ecx
-			retn
+			ret
 		}
 	}
 
@@ -3182,41 +3182,41 @@ namespace TextRectPaddingScalingFixes
 // By Wesser
 namespace NitrousReverseRechargeFix
 {
-	void __declspec(naked) NitrousControl_DontRechargeWhenReversing()
+	__declspec(naked) static void NitrousControl_DontRechargeWhenReversing()
 	{
 		// x = 1.0f; \ if m_fGasPedal >= 0.0f x -= m_fGasPedal;
 		_asm
 		{
-			fld		[esi+49Ch]
+			fld		dword ptr [esi+0x49C]
 			fldz
 			fcomp   st(1)
 			fnstsw  ax
-			test    ah, 41h
+			test    ah, 0x41
 			jnz		BiggerOrEqual
 			fstp	st
-			retn
+			ret
 
 		BiggerOrEqual:
 			fsubp   st(1), st
-			retn
+			ret
 		}
 	}
 
-	void __declspec(naked) NitrousControl_DontRechargeWhenReversing_NewBinaries()
+	__declspec(naked) static void NitrousControl_DontRechargeWhenReversing_NewBinaries()
 	{
 		_asm
 		{
-			fld		[esi+49Ch]
+			fld		dword ptr [esi+0x49C]
 			fldz
 			fcomp   st(1)
 			fnstsw  ax
-			test    ah, 41h
+			test    ah, 0x41
 			jnz		BiggerOrEqual
 			fstp	st
 			fldz
 
 		BiggerOrEqual:
-			retn
+			ret
 		}
 	}
 }
@@ -3503,7 +3503,7 @@ void InstallMemValidator()
 
 
 // Hooks
-void __declspec(naked) LightMaterialsFix()
+__declspec(naked) void LightMaterialsFix()
 {
 	_asm
 	{
@@ -3519,24 +3519,24 @@ void __declspec(naked) LightMaterialsFix()
 		mov		[ebx+16], edi
 		add		ebx, 20
 		mov		[ecx], ebx
-		retn
+		ret
 	}
 }
 
-void __declspec(naked) UserTracksFix()
+__declspec(naked) void UserTracksFix()
 {
 	_asm
 	{
 		push	[esp+4]
 		call	SetVolume
 		mov		ecx, [pUserTracksStuff]
-		mov		byte ptr [ecx+0Dh], 1
+		mov		byte ptr [ecx+0xD], 1
 		call	InitializeUtrax
-		retn	4
+		ret		4
 	}
 }
 
-void __declspec(naked) UserTracksFix_Steam()
+__declspec(naked) void UserTracksFix_Steam()
 {
 	_asm
 	{
@@ -3545,14 +3545,14 @@ void __declspec(naked) UserTracksFix_Steam()
 		mov		ecx, [pUserTracksStuff]
 		mov		byte ptr [ecx+5], 1
 		call	InitializeUtrax
-		retn	4
+		ret		4
 	}
 }
 
 static void*	PlaneAtomicRendererSetup_JumpBack = AddressByVersion<void*>(0x4C7986, 0x4C7A06, 0x4D2275);
 static void*	RenderVehicleHiDetailAlphaCB_BigVehicle = AddressByVersion<void*>(0x734370, 0x734BA0, 0x76E400);
 static void*	RenderVehicleHiDetailCB_BigVehicle = AddressByVersion<void*>(0x733420, 0x733C50, 0x76D6C0);
-void __declspec(naked) PlaneAtomicRendererSetup()
+__declspec(naked) void PlaneAtomicRendererSetup()
 {
 	static const char	aStaticProp[] = "static_prop";
 	static const char	aMovingProp[] = "moving_prop";
@@ -3561,31 +3561,30 @@ void __declspec(naked) PlaneAtomicRendererSetup()
 		mov     eax, [esi+4]
 		push	eax
 		call	GetFrameNodeName
-		//push	eax
 		mov		[esp+8+8], eax
 		push	11
 		push	offset aStaticProp
 		push	eax
 		call	strncmp
-		add		esp, 10h
+		add		esp, 0x10
 		test	eax, eax
 		jz		PlaneAtomicRendererSetup_Alpha
 		push	11
 		push	offset aMovingProp
 		push	[esp+12+8]
 		call	strncmp
-		add		esp, 0Ch
+		add		esp, 0xC
 		test	eax, eax
 		jnz		PlaneAtomicRendererSetup_NoAlpha
 
-PlaneAtomicRendererSetup_Alpha:
-		push	[RenderVehicleHiDetailAlphaCB_BigVehicle]
+	PlaneAtomicRendererSetup_Alpha:
+		push	RenderVehicleHiDetailAlphaCB_BigVehicle
 		jmp		PlaneAtomicRendererSetup_Return
 
-PlaneAtomicRendererSetup_NoAlpha:
-		push	[RenderVehicleHiDetailCB_BigVehicle]
+	PlaneAtomicRendererSetup_NoAlpha:
+		push	RenderVehicleHiDetailCB_BigVehicle
 
-PlaneAtomicRendererSetup_Return:
+	PlaneAtomicRendererSetup_Return:
 		jmp		PlaneAtomicRendererSetup_JumpBack
 	}
 }
@@ -3604,7 +3603,7 @@ static int strcmp_wrap(const char *s1, const char *s2)
 	return strcmp( s1, s2 );
 }
 
-void __declspec(naked) HunterTest()
+__declspec(naked) void HunterTest()
 {
 	static const char	aDoorDummy[] = "door_lf_ok";
 	static const char	aStaticRotor[] = "static_rotor";
@@ -3619,7 +3618,7 @@ void __declspec(naked) HunterTest()
 		push	offset aWindscreen
 		push	ebp
 		call	strncmp
-		add		esp, 0Ch
+		add		esp, 0xC
 		test	eax, eax
 		jz		HunterTest_RegularAlpha
 
@@ -3640,10 +3639,10 @@ void __declspec(naked) HunterTest()
 		test	di, di
 		jnz		HunterTest_DoorTest
 
-		push	[RenderVehicleHiDetailCB]
+		push	RenderVehicleHiDetailCB
 		jmp		HunterTest_JumpBack
 
-HunterTest_DoorTest:
+	HunterTest_DoorTest:
 		cmp		nCachedCRC, 0x45D0B41C
 		jnz		HunterTest_RegularAlpha
 		push	offset aDoorDummy
@@ -3655,22 +3654,22 @@ HunterTest_DoorTest:
 		push	RenderVehicleHiDetailAlphaCB_HunterDoor
 		jmp		HunterTest_JumpBack
 
-HunterTest_RegularAlpha:
-		push	[RenderVehicleHiDetailAlphaCB]
+	HunterTest_RegularAlpha:
+		push	RenderVehicleHiDetailAlphaCB
 		jmp		HunterTest_JumpBack
 
-HunterTest_StaticRotorAlphaSet:
-		push	[RenderHeliRotorAlphaCB]
+	HunterTest_StaticRotorAlphaSet:
+		push	RenderHeliRotorAlphaCB
 		jmp		HunterTest_JumpBack
 
-HunterTest_StaticRotor2AlphaSet:
-		push	[RenderHeliTailRotorAlphaCB]
+	HunterTest_StaticRotor2AlphaSet:
+		push	RenderHeliTailRotorAlphaCB
 		jmp		HunterTest_JumpBack
 	}
 }
  
 static void*	CacheCRC32_JumpBack = AddressByVersion<void*>(0x4C7B10, 0x4C7B90, 0x4D2400);
-void __declspec(naked) CacheCRC32()
+__declspec(naked) void CacheCRC32()
 {
 	_asm
 	{
@@ -3682,7 +3681,7 @@ void __declspec(naked) CacheCRC32()
 
 static void* const TrailerDoubleRWheelsFix_ReturnFalse = AddressByVersion<void*>(0x4C9333, 0x4C9533, 0x4D3C59);
 static void* const TrailerDoubleRWheelsFix_ReturnTrue = AddressByVersion<void*>(0x4C9235, 0x4C9435, 0x4D3B59);
-void __declspec(naked) TrailerDoubleRWheelsFix()
+__declspec(naked) void TrailerDoubleRWheelsFix()
 {
 	_asm
 	{
@@ -3693,26 +3692,26 @@ void __declspec(naked) TrailerDoubleRWheelsFix()
 		cmp		eax, 5
 		je		TrailerDoubleRWheelsFix_False
 
-TrailerDoubleRWheelsFix_DoWheels:
+	TrailerDoubleRWheelsFix_DoWheels:
 		jmp		TrailerDoubleRWheelsFix_ReturnTrue
 
-TrailerDoubleRWheelsFix_False:
+	TrailerDoubleRWheelsFix_False:
 		jmp		TrailerDoubleRWheelsFix_ReturnFalse
 	}
 }
 
-void __declspec(naked) TrailerDoubleRWheelsFix2()
+__declspec(naked) void TrailerDoubleRWheelsFix2()
 {
 	_asm
 	{
-		add     esp, 18h
+		add     esp, 0x18
 		mov     eax, [ebx]
 		mov     eax, [esi+eax+4]
 		jmp		TrailerDoubleRWheelsFix
 	}
 }
 
-void __declspec(naked) TrailerDoubleRWheelsFix_Steam()
+__declspec(naked) void TrailerDoubleRWheelsFix_Steam()
 {
 	_asm
 	{
@@ -3731,11 +3730,11 @@ TrailerDoubleRWheelsFix_False:
 	}
 }
 
-void __declspec(naked) TrailerDoubleRWheelsFix2_Steam()
+__declspec(naked) void TrailerDoubleRWheelsFix2_Steam()
 {
 	_asm
 	{
-		add     esp, 18h
+		add     esp, 0x18
 		mov     eax, [ebp]
 		mov     eax, [ebx+eax+4]
 		jmp		TrailerDoubleRWheelsFix_Steam
@@ -3743,7 +3742,7 @@ void __declspec(naked) TrailerDoubleRWheelsFix2_Steam()
 }
 
 static void*	LoadFLAC_JumpBack = AddressByVersion<void*>(0x4F3743, Memory::GetVersion().version == 1 ? (*(BYTE*)0x4F3A50 == 0x6A ? 0x4F3BA3 : 0x5B6B81) : 0, 0x4FFC3F);
-void __declspec(naked) LoadFLAC()
+__declspec(naked) void LoadFLAC()
 {
 	_asm
 	{
@@ -3754,36 +3753,36 @@ void __declspec(naked) LoadFLAC()
 		call	DecoderCtor
 		jmp		LoadFLAC_Success
 
-LoadFLAC_WindowsMedia:
+	LoadFLAC_WindowsMedia:
 		jmp		LoadFLAC_JumpBack
 
-LoadFLAC_Success:
+	LoadFLAC_Success:
 		test	eax, eax
-		mov		[esp+20h+4], eax
+		mov		[esp+0x20+4], eax
 		jnz		LoadFLAC_Return_NoDelete
 
-LoadFLAC_Return:
+	LoadFLAC_Return:
 		mov		ecx, esi
 		call	CAEDataStreamOld::~CAEDataStreamOld
 		push	esi
 		call	GTAdelete
 		add     esp, 4
 
-LoadFLAC_Return_NoDelete:
-		mov     eax, [esp+20h+4]
-		mov		ecx, [esp+20h-0Ch]
+	LoadFLAC_Return_NoDelete:
+		mov     eax, [esp+0x20+4]
+		mov		ecx, [esp+0x20-0xC]
 		pop		esi
 		pop		ebp
 		pop		edi
 		pop		ebx
 		mov		fs:0, ecx
-		add		esp, 10h
-		retn	4
+		add		esp, 0x10
+		ret		4
 	}
 }
 
 // 1.01 securom butchered this func, might not be reliable
-void __declspec(naked) LoadFLAC_11()
+__declspec(naked) void LoadFLAC_11()
 {
 	_asm
 	{
@@ -3794,36 +3793,36 @@ void __declspec(naked) LoadFLAC_11()
 		call	DecoderCtor
 		jmp		LoadFLAC_Success
 
-LoadFLAC_WindowsMedia:
+	LoadFLAC_WindowsMedia:
 		jmp		LoadFLAC_JumpBack
 
-LoadFLAC_Success:
+	LoadFLAC_Success:
 		test	eax, eax
-		mov		[esp+20h+4], eax
+		mov		[esp+0x20+4], eax
 		jnz		LoadFLAC_Return_NoDelete
 
-LoadFLAC_Return:
+	LoadFLAC_Return:
 		mov		ecx, esi
 		call	CAEDataStreamNew::~CAEDataStreamNew
 		push	esi
 		call	GTAdelete
 		add     esp, 4
 
-LoadFLAC_Return_NoDelete:
-		mov     eax, [esp+20h+4]
-		mov		ecx, [esp+20h-0Ch]
+	LoadFLAC_Return_NoDelete:
+		mov     eax, [esp+0x20+4]
+		mov		ecx, [esp+0x20-0xC]
 		pop		esi
 		pop		ebp
 		pop		edi
 		pop		ebx
 		mov		fs:0, ecx
-		add		esp, 10h
-		retn	4
+		add		esp, 0x10
+		ret		4
 	}
 }
 
 
-void __declspec(naked) LoadFLAC_Steam()
+__declspec(naked) void LoadFLAC_Steam()
 {
 	_asm
 	{
@@ -3834,44 +3833,44 @@ void __declspec(naked) LoadFLAC_Steam()
 		call	DecoderCtor
 		jmp		LoadFLAC_Success
 
-LoadFLAC_WindowsMedia:
+	LoadFLAC_WindowsMedia:
 		jmp		LoadFLAC_JumpBack
 
-LoadFLAC_Success:
+	LoadFLAC_Success:
 		test	eax, eax
-		mov		[esp+20h+4], eax
+		mov		[esp+0x20+4], eax
 		jnz		LoadFLAC_Return_NoDelete
 
-LoadFLAC_Return:
+	LoadFLAC_Return:
 		mov		ecx, esi
 		call	CAEDataStreamOld::~CAEDataStreamOld
 		push	esi
 		call	GTAdelete
 		add     esp, 4
 
-LoadFLAC_Return_NoDelete:
-		mov     eax, [esp+20h+4]
-		mov		ecx, [esp+20h-0Ch]
+	LoadFLAC_Return_NoDelete:
+		mov     eax, [esp+0x20+4]
+		mov		ecx, [esp+0x20-0xC]
 		pop		ebx
 		pop		esi
 		pop		ebp
 		pop		edi
 		mov		fs:0, ecx
-		add		esp, 10h
-		retn	4
+		add		esp, 0x10
+		ret		4
 	}
 }
 
-void __declspec(naked) FLACInit()
+__declspec(naked) void FLACInit()
 {
 	_asm
 	{
-		mov		byte ptr [ecx+0Dh], 1
+		mov		byte ptr [ecx+0xD], 1
 		jmp		InitializeUtrax
 	}
 }
 
-void __declspec(naked) FLACInit_Steam()
+__declspec(naked) void FLACInit_Steam()
 {
 	_asm
 	{
