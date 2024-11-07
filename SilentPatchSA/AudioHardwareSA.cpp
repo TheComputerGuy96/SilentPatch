@@ -7,7 +7,7 @@ static void* CAEDataStream__Initialise = AddressByVersion<void*>(0x4DC2B0, 0x4DC
 WRAPPER bool CAEDataStream::Initialise() { VARJMP(CAEDataStream__Initialise); }
 
 // Work around libflac linking issues with older MSVC
-#if _MSC_VER < 1930
+#if defined(_MSC_VER) && _MSC_VER < 1930
 
 extern "C" unsigned long __declspec(naked)  _dtoul3_legacy(const double x) {
 	_asm
