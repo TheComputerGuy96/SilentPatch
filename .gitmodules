@@ -1,3 +1,6 @@
 [submodule "SilentPatch/Utils"]
 	path = SilentPatch/Utils
 	url = https://github.com/CookiePLMonster/ModUtils.git
+[submodule "SilentPatchSA/libflac"]
+	path = SilentPatchSA/libflac
+	url = https://github.com/xiph/flac.git
