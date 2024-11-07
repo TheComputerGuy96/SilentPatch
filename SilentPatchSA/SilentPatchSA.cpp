@@ -4253,8 +4253,8 @@ BOOL InjectDelayedPatches_10()
 		if ( !bSARender )
 		{
 			// Twopass rendering (experimental)
-			Patch<const void*>(0x7341D9, MovingPropellerRender);
-			Patch<const void*>(0x734127, MovingPropellerRender);
+			Patch<const void*>(0x7341D9, reinterpret_cast<const void*>(MovingPropellerRender));
+			Patch<const void*>(0x734127, reinterpret_cast<const void*>(MovingPropellerRender));
 			Patch(0x73445E, RenderBigVehicleActomic);
 
 
@@ -4826,8 +4826,8 @@ BOOL InjectDelayedPatches_11()
 		if ( !bSARender )
 		{
 			// Twopass rendering (experimental)
-			Patch<const void*>(0x734A09, MovingPropellerRender);
-			Patch<const void*>(0x734957, MovingPropellerRender);
+			Patch<const void*>(0x734A09, reinterpret_cast<const void*>(MovingPropellerRender));
+			Patch<const void*>(0x734957, reinterpret_cast<const void*>(MovingPropellerRender));
 			Patch(0x734C8E, RenderBigVehicleActomic);
 
 			// Weapons rendering
@@ -5000,8 +5000,8 @@ BOOL InjectDelayedPatches_Steam()
 		if ( !bSARender )
 		{
 			// Twopass rendering (experimental)
-			Patch<const void*>(0x76E230, MovingPropellerRender);
-			Patch<const void*>(0x76E160, MovingPropellerRender);
+			Patch<const void*>(0x76E230, reinterpret_cast<const void*>(MovingPropellerRender));
+			Patch<const void*>(0x76E160, reinterpret_cast<const void*>(MovingPropellerRender));
 			Patch(0x76E4F0, RenderBigVehicleActomic);
 
 
@@ -6922,7 +6922,7 @@ void Patch_SA_Steam()
 	// User Tracks fix
 	SetVolume = reinterpret_cast<decltype(SetVolume)>(0x4E2750);
 	Patch<BYTE>(0x4E4A28, 0xBA);
-	Patch<const void*>(0x4E4A29, UserTracksFix_Steam);
+	Patch<const void*>(0x4E4A29, reinterpret_cast<const void*>(UserTracksFix_Steam));
 	InjectHook(0x4E4A8B, 0x4FF2B0);
 
 	// FLAC support
