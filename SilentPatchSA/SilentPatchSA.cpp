@@ -2884,6 +2884,7 @@ namespace RemoveDriverStatusFix
 	{
 		// if (m_nStatus != STATUS_WRECKED)
 		//   m_nStatus = STATUS_ABANDONED;
+#ifdef _MSC_VER
 		_asm
 		{
 			mov		bl, [edi+0x36]
@@ -2897,6 +2898,21 @@ namespace RemoveDriverStatusFix
 		DontSetStatus:
 			ret
 		}
+#elif defined(__GNUC__) || defined(__clang__)
+		__asm__ volatile
+		(
+			"mov	bl, [edi+0x36]\n"
+			"mov	al, bl\n"
+			"and	bl, 0xF8\n"
+			"cmp	bl, 0x28\n"
+			"je		DontSetStatus\n"
+			"and    al, 7\n"
+			"or     al, 0x20\n"
+
+		"DontSetStatus:\n"
+			"ret"
+		);
+#endif
 	}
 
 	static void (__thiscall *orgPrepareVehicleForPedExit)(CTaskComplexCarSlowBeDraggedOut* task, CPed* ped);
@@ -3380,6 +3396,7 @@ namespace MapScreenScalingFixes
 {	
 	__declspec(naked) void ScaleX_NewBinaries()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			push	ecx
@@ -3392,10 +3409,26 @@ namespace MapScreenScalingFixes
 			pop		ecx
 			ret
 		}
+#elif defined(__GNUC__) || defined(__clang__)
+		__asm__ volatile
+		(
+			"push	ecx\n"
+			"push	0x3F800000\n" // 1.0f
+			"call	[%[ScaleX]]\n"
+			"add	esp, 4\n"
+
+			"fsub   st(1), st\n"
+			"fxch   st(1)\n"
+			"pop	ecx\n"
+			"ret"
+			:: [ScaleX] "r" (ScaleX)
+		);
+#endif
 	}
 
 	__declspec(naked) void ScaleY_NewBinaries()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			push	ecx
@@ -3408,6 +3441,21 @@ namespace MapScreenScalingFixes
 			pop		ecx
 			ret
 		}
+#elif defined(__GNUC__) || defined(__clang__)
+		__asm__ volatile
+		(
+			"push	ecx\n"
+			"push	0x3F800000\n" // 1.0f
+			"call	[%[ScaleY]]\n"
+			"add	esp, 4\n"
+
+			"fsub   st(1), st\n"
+			"fxch   st(1)\n"
+			"pop	ecx\n"
+			"ret"
+			:: [ScaleY] "r" (ScaleY)
+		);
+#endif
 	}
 
 
@@ -3535,6 +3583,7 @@ namespace NitrousReverseRechargeFix
 	__declspec(naked) static void NitrousControl_DontRechargeWhenReversing()
 	{
 		// x = 1.0f; \ if m_fGasPedal >= 0.0f x -= m_fGasPedal;
+#ifdef _MSC_VER
 		_asm
 		{
 			fld		dword ptr [esi+0x49C]
@@ -3550,10 +3599,28 @@ namespace NitrousReverseRechargeFix
 			fsubp   st(1), st
 			ret
 		}
+#elif defined(__GNUC__) || defined(__clang__)
+		__asm__ volatile
+		(
+			"fld	dword ptr [esi+0x49C]\n"
+			"fldz\n"
+			"fcomp  st(1)\n"
+			"fnstsw ax\n"
+			"test   ah, 0x41\n"
+			"jnz	BiggerOrEqual\n"
+			"fstp	st\n"
+			"ret\n"
+
+		"BiggerOrEqual:\n"
+			"fsubp  st(1), st\n"
+			"ret"
+		);
+#endif
 	}
 
 	__declspec(naked) static void NitrousControl_DontRechargeWhenReversing_NewBinaries()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			fld		dword ptr [esi+0x49C]
@@ -3568,6 +3635,22 @@ namespace NitrousReverseRechargeFix
 		BiggerOrEqual:
 			ret
 		}
+#elif defined(__GNUC__) || defined(__clang__)
+		__asm__ volatile
+		(
+			"fld	dword ptr [esi+0x49C]\n"
+			"fldz\n"
+			"fcomp  st(1)\n"
+			"fnstsw ax\n"
+			"test   ah, 0x41\n"
+			"jnz	BiggerOrEqual2\n"
+			"fstp	st\n"
+			"fldz\n"
+
+		"BiggerOrEqual2:\n"
+			"ret"
+		);
+#endif
 	}
 }
 
@@ -3855,6 +3938,7 @@ void InstallMemValidator()
 // Hooks
 __declspec(naked) void LightMaterialsFix()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov     [esi], edi
@@ -3871,10 +3955,29 @@ __declspec(naked) void LightMaterialsFix()
 		mov		[ecx], ebx
 		ret
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov    [esi], edi\n"
+		"mov	ebx, [ecx]\n"
+		"lea    esi, [edx+4]\n"
+		"mov	[ebx+4], esi\n"
+		"mov	edi, [esi]\n"
+		"mov	[ebx+8], edi\n"
+		"add	esi, 4\n"
+		"mov	[ebx+12], esi\n"
+		"mov	edi, [esi]\n"
+		"mov	[ebx+16], edi\n"
+		"add	ebx, 20\n"
+		"mov	[ecx], ebx\n"
+		"ret"
+	);
+#endif
 }
 
 __declspec(naked) void UserTracksFix()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		push	[esp+4]
@@ -3884,10 +3987,25 @@ __declspec(naked) void UserTracksFix()
 		call	InitializeUtrax
 		ret		4
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"push	[esp+4]\n"
+		"call	%[SetVolume]\n"
+		"mov	ecx, [%[pUserTracksStuff]]\n"
+		"mov	byte ptr [ecx+0xD], 1\n"
+		"call	%[InitializeUtrax]\n"
+		"ret	4"
+		:: [SetVolume] "m" (SetVolume),
+		[pUserTracksStuff] "=r" (pUserTracksStuff),
+		[InitializeUtrax] "m" (InitializeUtrax)
+	);
+#endif
 }
 
 __declspec(naked) void UserTracksFix_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		push	[esp+4]
@@ -3897,6 +4015,20 @@ __declspec(naked) void UserTracksFix_Steam()
 		call	InitializeUtrax
 		ret		4
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"push	[esp+4]\n"
+		"call	%[SetVolume]\n"
+		"mov	ecx, [%[pUserTracksStuff]]\n"
+		"mov	byte ptr [ecx+5], 1\n"
+		"call	%[InitializeUtrax]\n"
+		"ret	4"
+		:: [SetVolume] "m" (SetVolume),
+		[pUserTracksStuff] "=r" (pUserTracksStuff),
+		[InitializeUtrax] "m" (InitializeUtrax)
+	);
+#endif
 }
 
 static void*	PlaneAtomicRendererSetup_JumpBack = AddressByVersion<void*>(0x4C7986, 0x4C7A06, 0x4D2275);
@@ -3906,6 +4038,7 @@ __declspec(naked) void PlaneAtomicRendererSetup()
 {
 	static const char	aStaticProp[] = "static_prop";
 	static const char	aMovingProp[] = "moving_prop";
+#ifdef _MSC_VER
 	_asm
 	{
 		mov     eax, [esi+4]
@@ -3937,6 +4070,46 @@ __declspec(naked) void PlaneAtomicRendererSetup()
 	PlaneAtomicRendererSetup_Return:
 		jmp		PlaneAtomicRendererSetup_JumpBack
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov    eax, [esi+4]\n"
+		"push	eax\n"
+		"call	%[GetFrameNodeName]\n"
+		"mov	[esp+8+8], eax\n"
+		"push	11\n"
+		"push	offset %[aStaticProp]\n"
+		"push	eax\n"
+		"call	%[strncmp]\n"
+		"add	esp, 0x10\n"
+		"test	eax, eax\n"
+		"jz		PlaneAtomicRendererSetup_Alpha\n"
+		"push	11\n"
+		"push	offset %[aMovingProp]\n"
+		"push	[esp+12+8]\n"
+		"call	%[strncmp]\n"
+		"add	esp, 0xC\n"
+		"test	eax, eax\n"
+		"jnz	PlaneAtomicRendererSetup_NoAlpha\n"
+
+	"PlaneAtomicRendererSetup_Alpha:\n"
+		"push	%[RenderVehicleHiDetailAlphaCB_BigVehicle]\n"
+		"jmp	PlaneAtomicRendererSetup_Return\n"
+
+	"PlaneAtomicRendererSetup_NoAlpha:\n"
+		"push	%[RenderVehicleHiDetailCB_BigVehicle]\n"
+
+	"PlaneAtomicRendererSetup_Return:\n"
+		"jmp	%[PlaneAtomicRendererSetup_JumpBack]"
+		:: [GetFrameNodeName] "m" (GetFrameNodeName),
+		[aStaticProp] "m" (aStaticProp),
+		[strncmp] "i" (strncmp),
+		[aMovingProp] "m" (aMovingProp),
+		[RenderVehicleHiDetailAlphaCB_BigVehicle] "m" (RenderVehicleHiDetailAlphaCB_BigVehicle),
+		[RenderVehicleHiDetailCB_BigVehicle] "m" (RenderVehicleHiDetailCB_BigVehicle),
+		[PlaneAtomicRendererSetup_JumpBack] "m" (PlaneAtomicRendererSetup_JumpBack)
+	);
+#endif
 }
 
 static unsigned int		nCachedCRC;
@@ -3959,6 +4132,7 @@ __declspec(naked) void HunterTest()
 	static const char	aStaticRotor[] = "static_rotor";
 	static const char	aStaticRotor2[] = "static_rotor2";
 	static const char	aWindscreen[] = "windscreen";
+#ifdef _MSC_VER
 	_asm
 	{
 		setnz	al
@@ -4016,23 +4190,112 @@ __declspec(naked) void HunterTest()
 		push	RenderHeliTailRotorAlphaCB
 		jmp		HunterTest_JumpBack
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"setnz	al\n"
+		"movzx	di, al\n"
+
+		"push	10\n"
+		"push	offset %[aWindscreen]\n"
+		"push	ebp\n"
+		"call	%[strncmp]\n"
+		"add	esp, 0xC\n"
+		"test	eax, eax\n"
+		"jz		HunterTest_RegularAlpha\n"
+
+		"push	offset %[aStaticRotor2]\n"
+		"push	ebp\n"
+		"call	%[strcmp_wrap]\n"
+		"add	esp, 8\n"
+		"test	eax, eax\n"
+		"jz		HunterTest_StaticRotor2AlphaSet\n"
+
+		"push	offset %[aStaticRotor]\n"
+		"push	ebp\n"
+		"call	%[strcmp_wrap]\n"
+		"add	esp, 8\n"
+		"test	eax, eax\n"
+		"jz		HunterTest_StaticRotorAlphaSet\n"
+
+		"test	di, di\n"
+		"jnz	HunterTest_DoorTest\n"
+
+		"push	%[RenderVehicleHiDetailCB]\n"
+		"jmp	%[HunterTest_JumpBack]\n"
+
+	"HunterTest_DoorTest:\n"
+		"cmp	%[nCachedCRC], 0x45D0B41C\n"
+		"jnz	HunterTest_RegularAlpha\n"
+		"push	offset %[aDoorDummy]\n"
+		"push	ebp\n"
+		"call	%[strcmp_wrap]\n"
+		"add	esp, 8\n"
+		"test	eax, eax\n"
+		"jnz	HunterTest_RegularAlpha\n"
+		"push	%[RenderVehicleHiDetailAlphaCB_HunterDoor]\n"
+		"jmp	%[HunterTest_JumpBack]\n"
+
+	"HunterTest_RegularAlpha:\n"
+		"push	%[RenderVehicleHiDetailAlphaCB]\n"
+		"jmp	%[HunterTest_JumpBack]\n"
+
+	"HunterTest_StaticRotorAlphaSet:\n"
+		"push	%[RenderHeliRotorAlphaCB]\n"
+		"jmp	%[HunterTest_JumpBack]\n"
+
+	"HunterTest_StaticRotor2AlphaSet:\n"
+		"push	%[RenderHeliTailRotorAlphaCB]\n"
+		"jmp	%[HunterTest_JumpBack]"
+		:: [aWindscreen] "m" (aWindscreen),
+		[strncmp] "i" (strncmp),
+		[aStaticRotor2] "m" (aStaticRotor2),
+		[strcmp_wrap] "i" (strcmp_wrap),
+		[aStaticRotor] "m" (aStaticRotor),
+		[RenderVehicleHiDetailCB] "m" (RenderVehicleHiDetailCB),
+		[HunterTest_JumpBack] "m" (HunterTest_JumpBack),
+		[nCachedCRC] "m" (nCachedCRC),
+		[aDoorDummy] "m" (aDoorDummy),
+		[RenderVehicleHiDetailAlphaCB_HunterDoor] "i" (RenderVehicleHiDetailAlphaCB_HunterDoor),
+		[RenderVehicleHiDetailAlphaCB] "m" (RenderVehicleHiDetailAlphaCB),
+		[RenderHeliRotorAlphaCB] "m" (RenderHeliRotorAlphaCB),
+		[RenderHeliTailRotorAlphaCB] "m" (RenderHeliTailRotorAlphaCB)
+	);
+#endif
 }
  
 static void*	CacheCRC32_JumpBack = AddressByVersion<void*>(0x4C7B10, 0x4C7B90, 0x4D2400);
 __declspec(naked) void CacheCRC32()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov		eax, [ecx+4]
 		mov		nCachedCRC, eax
 		jmp		CacheCRC32_JumpBack
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov	eax, [ecx+4]\n"
+		"mov	%[nCachedCRC], eax\n"
+		"jmp	%[CacheCRC32_JumpBack]"
+		: [nCachedCRC] "=m" (nCachedCRC)
+		: [CacheCRC32_JumpBack] "m" (CacheCRC32_JumpBack)
+	);
+#endif
+}
+
+unsigned int __thiscall CVehicleModelInfo_dwType(CVehicleModelInfo* modelinfo)
+{
+	return modelinfo->m_dwType;
 }
 
 static void* const TrailerDoubleRWheelsFix_ReturnFalse = AddressByVersion<void*>(0x4C9333, 0x4C9533, 0x4D3C59);
 static void* const TrailerDoubleRWheelsFix_ReturnTrue = AddressByVersion<void*>(0x4C9235, 0x4C9435, 0x4D3B59);
 __declspec(naked) void TrailerDoubleRWheelsFix()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		cmp		[edi]CVehicleModelInfo.m_dwType, VEHICLE_TRAILER
@@ -4048,10 +4311,38 @@ __declspec(naked) void TrailerDoubleRWheelsFix()
 	TrailerDoubleRWheelsFix_False:
 		jmp		TrailerDoubleRWheelsFix_ReturnFalse
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"push	ecx\n"
+		"push	eax\n"
+		"mov	ecx, edi\n"
+		"call	%[CVehicleModelInfo_dwType]\n"
+		"cmp	eax, %[VEHICLE_TRAILER]\n"
+		"pop	eax\n"
+		"pop	ecx\n"
+		"je		TrailerDoubleRWheelsFix_DoWheels\n"
+		"cmp	eax, 2\n"
+		"je		TrailerDoubleRWheelsFix_False\n"
+		"cmp	eax, 5\n"
+		"je		TrailerDoubleRWheelsFix_False\n"
+
+	"TrailerDoubleRWheelsFix_DoWheels:\n"
+		"jmp	%[TrailerDoubleRWheelsFix_ReturnTrue]\n"
+
+	"TrailerDoubleRWheelsFix_False:\n"
+		"jmp	%[TrailerDoubleRWheelsFix_ReturnFalse]"
+		:: [CVehicleModelInfo_dwType] "i" (CVehicleModelInfo_dwType),
+		[VEHICLE_TRAILER] "i" (VEHICLE_TRAILER),
+		[TrailerDoubleRWheelsFix_ReturnTrue] "m" (TrailerDoubleRWheelsFix_ReturnTrue),
+		[TrailerDoubleRWheelsFix_ReturnFalse] "m" (TrailerDoubleRWheelsFix_ReturnFalse)
+	);
+#endif
 }
 
 __declspec(naked) void TrailerDoubleRWheelsFix2()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		add     esp, 0x18
@@ -4059,10 +4350,21 @@ __declspec(naked) void TrailerDoubleRWheelsFix2()
 		mov     eax, [esi+eax+4]
 		jmp		TrailerDoubleRWheelsFix
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"add    esp, 0x18\n"
+		"mov    eax, [ebx]\n"
+		"mov    eax, [esi+eax+4]\n"
+		"jmp	%[TrailerDoubleRWheelsFix]"
+		:: [TrailerDoubleRWheelsFix] "i" (TrailerDoubleRWheelsFix)
+	);
+#endif
 }
 
 __declspec(naked) void TrailerDoubleRWheelsFix_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		cmp		[esi]CVehicleModelInfo.m_dwType, VEHICLE_TRAILER
@@ -4078,10 +4380,30 @@ TrailerDoubleRWheelsFix_DoWheels:
 TrailerDoubleRWheelsFix_False:
 		jmp		TrailerDoubleRWheelsFix_ReturnFalse
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"push	ecx\n"
+		"push	eax\n"
+		"mov	ecx, esi\n"
+		"call	%[CVehicleModelInfo_dwType]\n"
+		"cmp	eax, %[VEHICLE_TRAILER]\n"
+		"pop	eax\n"
+		"pop	ecx\n"
+		"je		TrailerDoubleRWheelsFix_DoWheels\n"
+		"cmp	eax, 2\n"
+		"je		TrailerDoubleRWheelsFix_False\n"
+		"cmp	eax, 5\n"
+		"je		TrailerDoubleRWheelsFix_False"
+		:: [CVehicleModelInfo_dwType] "i" (CVehicleModelInfo_dwType),
+		[VEHICLE_TRAILER] "i" (VEHICLE_TRAILER)
+	);
+#endif
 }
 
 __declspec(naked) void TrailerDoubleRWheelsFix2_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		add     esp, 0x18
@@ -4089,11 +4411,32 @@ __declspec(naked) void TrailerDoubleRWheelsFix2_Steam()
 		mov     eax, [ebx+eax+4]
 		jmp		TrailerDoubleRWheelsFix_Steam
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"add    esp, 0x18\n"
+		"mov    eax, [ebp]\n"
+		"mov    eax, [ebx+eax+4]\n"
+		"jmp	%[TrailerDoubleRWheelsFix_Steam]"
+		:: [TrailerDoubleRWheelsFix_Steam] "i" (TrailerDoubleRWheelsFix_Steam)
+	);
+#endif
+}
+
+void __thiscall CAEDataStreamOld_dtor(CAEDataStreamOld* stream)
+{
+	stream->~CAEDataStreamOld();
+}
+
+void __thiscall CAEDataStreamNew_dtor(CAEDataStreamNew* stream)
+{
+	stream->~CAEDataStreamNew();
 }
 
 static void*	LoadFLAC_JumpBack = AddressByVersion<void*>(0x4F3743, Memory::GetVersion().version == 1 ? (*(BYTE*)0x4F3A50 == 0x6A ? 0x4F3BA3 : 0x5B6B81) : 0, 0x4FFC3F);
 __declspec(naked) void LoadFLAC()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		LoadFLAC_WindowsMedia
@@ -4129,11 +4472,53 @@ __declspec(naked) void LoadFLAC()
 		add		esp, 0x10
 		ret		4
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		LoadFLAC_WindowsMedia\n"
+		"sub	ebp, 2\n"
+		"jnz	LoadFLAC_Return\n"
+		"push	esi\n"
+		"call	%[DecoderCtor]\n"
+		"jmp	LoadFLAC_Success\n"
+
+	"LoadFLAC_WindowsMedia:\n"
+		"jmp	%[LoadFLAC_JumpBack]\n"
+
+	"LoadFLAC_Success:\n"
+		"test	eax, eax\n"
+		"mov	[esp+0x20+4], eax\n"
+		"jnz	LoadFLAC_Return_NoDelete\n"
+
+	"LoadFLAC_Return:\n"
+		"mov	ecx, esi\n"
+		"call	%[CAEDataStreamOld_dtor]\n"
+		"push	esi\n"
+		"call	%[GTAdelete]\n"
+		"add    esp, 4\n"
+
+	"LoadFLAC_Return_NoDelete:\n"
+		"mov    eax, [esp+0x20+4]\n"
+		"mov	ecx, [esp+0x20-0xC]\n"
+		"pop	esi\n"
+		"pop	ebp\n"
+		"pop	edi\n"
+		"pop	ebx\n"
+		"mov	fs:0, ecx\n"
+		"add	esp, 0x10\n"
+		"ret	4"
+		:: [DecoderCtor] "i" (DecoderCtor),
+		[LoadFLAC_JumpBack] "m" (LoadFLAC_JumpBack),
+		[CAEDataStreamOld_dtor] "i" (CAEDataStreamOld_dtor),
+		[GTAdelete] "m" (GTAdelete)
+	);
+#endif
 }
 
 // 1.01 securom butchered this func, might not be reliable
 __declspec(naked) void LoadFLAC_11()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		LoadFLAC_WindowsMedia
@@ -4169,11 +4554,49 @@ __declspec(naked) void LoadFLAC_11()
 		add		esp, 0x10
 		ret		4
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		LoadFLAC_WindowsMedia\n"
+		"sub	ebp, 2\n"
+		"jnz	LoadFLAC_Return2\n"
+		"push	esi\n"
+		"call	%[DecoderCtor]\n"
+		"jmp	LoadFLAC_Success2\n"
+
+	"LoadFLAC_Success2:\n"
+		"test	eax, eax\n"
+		"mov	[esp+0x20+4], eax\n"
+		"jnz	LoadFLAC_Return_NoDelete2\n"
+
+	"LoadFLAC_Return2:\n"
+		"mov	ecx, esi\n"
+		"call	%[CAEDataStreamNew_dtor]\n"
+		"push	esi\n"
+		"call	%[GTAdelete]\n"
+		"add    esp, 4\n"
+
+	"LoadFLAC_Return_NoDelete2:\n"
+		"mov    eax, [esp+0x20+4]\n"
+		"mov	ecx, [esp+0x20-0xC]\n"
+		"pop	esi\n"
+		"pop	ebp\n"
+		"pop	edi\n"
+		"pop	ebx\n"
+		"mov	fs:0, ecx\n"
+		"add	esp, 0x10\n"
+		"ret	4"
+		:: [DecoderCtor] "i" (DecoderCtor),
+		[CAEDataStreamNew_dtor] "i" (CAEDataStreamNew_dtor),
+		[GTAdelete] "m" (GTAdelete)
+	);
+#endif
 }
 
 
 __declspec(naked) void LoadFLAC_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		jz		LoadFLAC_WindowsMedia
@@ -4209,24 +4632,79 @@ __declspec(naked) void LoadFLAC_Steam()
 		add		esp, 0x10
 		ret		4
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"jz		LoadFLAC_WindowsMedia\n"
+		"sub	ebp, 2\n"
+		"jnz	LoadFLAC_Return3\n"
+		"push	esi\n"
+		"call	%[DecoderCtor]\n"
+		"jmp	LoadFLAC_Success3\n"
+
+	"LoadFLAC_Success3:\n"
+		"test	eax, eax\n"
+		"mov	[esp+0x20+4], eax\n"
+		"jnz	LoadFLAC_Return_NoDelete3\n"
+
+	"LoadFLAC_Return3:\n"
+		"mov	ecx, esi\n"
+		"call	%[CAEDataStreamOld_dtor]\n"
+		"push	esi\n"
+		"call	%[GTAdelete]\n"
+		"add    esp, 4\n"
+
+	"LoadFLAC_Return_NoDelete3:\n"
+		"mov    eax, [esp+0x20+4]\n"
+		"mov	ecx, [esp+0x20-0xC]\n"
+		"pop	ebx\n"
+		"pop	esi\n"
+		"pop	ebp\n"
+		"pop	edi\n"
+		"mov	fs:0, ecx\n"
+		"add	esp, 0x10\n"
+		"ret	4"
+		:: [DecoderCtor] "i" (DecoderCtor),
+		[CAEDataStreamOld_dtor] "i" (CAEDataStreamOld_dtor),
+		[GTAdelete] "m" (GTAdelete)
+	);
+#endif
 }
 
 __declspec(naked) void FLACInit()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov		byte ptr [ecx+0xD], 1
 		jmp		InitializeUtrax
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov	byte ptr [ecx+0xD], 1\n"
+		"jmp	%[InitializeUtrax]"
+		:: [InitializeUtrax] "m" (InitializeUtrax)
+	);
+#endif
 }
 
 __declspec(naked) void FLACInit_Steam()
 {
+#ifdef _MSC_VER
 	_asm
 	{
 		mov		byte ptr [ecx+5], 1
 		jmp		InitializeUtrax
 	}
+#elif defined(__GNUC__) || defined(__clang__)
+	__asm__ volatile
+	(
+		"mov	byte ptr [ecx+5], 1\n"
+		"jmp	%[InitializeUtrax]"
+		:: [InitializeUtrax] "m" (InitializeUtrax)
+	);
+#endif
 }
 
 
