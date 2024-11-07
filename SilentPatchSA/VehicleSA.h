@@ -186,7 +186,8 @@ namespace LightbeamFix
 
 class NOVMT CVehicle	: public CPhysical
 {
-protected:
+// FIXME: This originally was protected (but we need to access hFlagsLocal variable)
+public:
 	BYTE			__pad0[596];
 	uint32_t		hFlagsLocal;
 	BYTE			__pad1[152];
