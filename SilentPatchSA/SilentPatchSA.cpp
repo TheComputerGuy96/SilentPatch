@@ -1866,8 +1866,16 @@ namespace FirelaHook
 	static uintptr_t UpdateMovingCollisionJmp;
 	static uintptr_t HydraulicControlJmpBack;
 
+#ifndef _MSC_VER
+	bool __thiscall CVehicle_HasFirelaLadder(CVehicle* vehicle)
+	{
+		return vehicle->HasFirelaLadder();
+	}
+#endif
+
 	__declspec(naked) static void TestFirelaAndFlags()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			push	ecx		// Required in 0x6B1FE4: test cl, cl
@@ -1882,6 +1890,26 @@ namespace FirelaHook
 		TestFirelaAndFlags_UpdateMovingCollision:
 			jmp		UpdateMovingCollisionJmp
 		}
+#else
+		__asm__ volatile
+		(
+			"push	ecx\n"	// Required in 0x6B1FE4: test cl, cl
+			"mov	ecx, esi\n"
+			"call	%[CVehicle_HasFirelaLadder]\n"
+			"pop	ecx\n"
+			"test	al, al\n"
+			"jnz	TestFirelaAndFlags_UpdateMovingCollision\n"
+			"test	dword ptr [esi+0x38C], %[flag_hydraulics_enabled]\n" // hFlagsLocal offset
+			"jmp	%[HydraulicControlJmpBack]\n"
+
+		"TestFirelaAndFlags_UpdateMovingCollision:\n"
+			"jmp	%[UpdateMovingCollisionJmp]"
+			:: [CVehicle_HasFirelaLadder] "i" (CVehicle_HasFirelaLadder),
+			[flag_hydraulics_enabled] "i" (FLAG_HYDRAULICS_INSTALLED),
+			[HydraulicControlJmpBack] "m" (HydraulicControlJmpBack),
+			[UpdateMovingCollisionJmp] "m" (UpdateMovingCollisionJmp)
+		);
+#endif
 	}
 
 	static uintptr_t FollowCarCamNoMovement;
@@ -1889,6 +1917,7 @@ namespace FirelaHook
 
 	__declspec(naked) static void CamControlFirela()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			mov		ecx, edi
@@ -1901,6 +1930,23 @@ namespace FirelaHook
 		TestFirelaAndFlags_UpdateMovingCollision:
 			jmp		FollowCarCamNoMovement
 		}
+#else
+		__asm__ volatile
+		(
+			"mov	ecx, edi\n"
+			"call	%[CVehicle_HasFirelaLadder]\n"
+			"test	al, al\n"
+			"jnz	TestFirelaAndFlags_UpdateMovingCollision2\n"
+			"mov	eax, dword ptr [edi+0x590]\n" // m_dwVehicleClass offset
+			"jmp	%[FollowCarCamJmpBack]\n"
+
+		"TestFirelaAndFlags_UpdateMovingCollision2:\n"
+			"jmp	%[FollowCarCamNoMovement]"
+			:: [CVehicle_HasFirelaLadder] "i" (CVehicle_HasFirelaLadder),
+			[FollowCarCamJmpBack] "m" (FollowCarCamJmpBack),
+			[FollowCarCamNoMovement] "m" (FollowCarCamNoMovement)
+		);
+#endif
 	}
 }
 
@@ -2124,6 +2170,7 @@ namespace TrueInvincibility
 
 	__declspec(naked) static void ComputeWillKillPedHook()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			cmp		dword ptr [ebp+0xC], WEAPONTYPE_LAST_WEAPONTYPE
@@ -2142,6 +2189,30 @@ namespace TrueInvincibility
 		ComputeWillKillPedHook_Kill:
 			jmp		WillKillJumpBack
 		}
+#else
+		__asm__ volatile
+		(
+			"cmp	dword ptr [ebp+0xC], %[WEAPONTYPE_LAST_WEAPONTYPE]\n"
+			"jl		ComputeWillKillPedHook_DoNotKill\n"
+			"cmp	byte ptr %[isEnabled], 0\n"
+			"je		ComputeWillKillPedHook_Kill\n"
+			"cmp	dword ptr [ebp+0xC], %[WEAPONTYPE_UZI_DRIVEBY]\n"
+			"jne	ComputeWillKillPedHook_Kill\n"
+
+		"ComputeWillKillPedHook_DoNotKill:\n"
+			"pop    esi\n"
+			"pop    ebp\n"
+			"pop    ebx\n"
+			"ret    0xC\n"
+
+		"ComputeWillKillPedHook_Kill:\n"
+			"jmp	%[WillKillJumpBack]"
+			:: [WEAPONTYPE_LAST_WEAPONTYPE] "i" (WEAPONTYPE_LAST_WEAPONTYPE),
+			[isEnabled] "m" (isEnabled),
+			[WEAPONTYPE_UZI_DRIVEBY] "i" (WEAPONTYPE_UZI_DRIVEBY),
+			[WillKillJumpBack] "m" (WillKillJumpBack)
+		);
+#endif
 	}
 }
 
@@ -2302,6 +2373,7 @@ namespace QuadbikeHandlebarAnims
 	static const float SLOW_SPEED_THRESHOLD = 0.02f;
 	__declspec(naked) static void ProcessRiderAnims_FixInterp()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			xor		edx, edx
@@ -2323,11 +2395,37 @@ namespace QuadbikeHandlebarAnims
 			fld		POW_CONSTANT
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			"xor	edx, edx\n"
+			"cmp    [esp+0x130-0x100], edx\n" // Reverse animation
+			"jne	FuncSetToZero\n"
+			"cmp    [esp+0x130-0xF8], edx\n" // Drive-by animation
+			"jne	FuncSetToZero\n"
+			"fld    dword ptr [esp+0x130-0x108]\n"
+			"fabs\n"
+			"fcomp	dword ptr %[SLOW_SPEED_THRESHOLD]\n"
+			"fnstsw ax\n"
+			"test   ah, 5\n"
+			"jp		FuncReturn\n"
+
+		"FuncSetToZero:\n"
+			"mov	[esp+0x130-0x118], edx\n"
+
+		"FuncReturn:\n"
+			"fld	dword ptr %[POW_CONSTANT]\n"
+			"ret"
+			:: [SLOW_SPEED_THRESHOLD] "m" (SLOW_SPEED_THRESHOLD),
+			[POW_CONSTANT] "m" (POW_CONSTANT)
+		);
+#endif
 	}
 
 	static uint32_t savedClumpAssociation;
 	__declspec(naked) static void SaveDriveByAnim_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			mov		eax, [ebp-0x14]
@@ -2336,10 +2434,22 @@ namespace QuadbikeHandlebarAnims
 			fstp	dword ptr [ebp-0x14]
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			"mov	eax, [ebp-0x14]\n"
+			"mov	%[savedClumpAssociation], eax\n"
+			"fdiv   dword ptr [ecx+0x18]\n"
+			"fstp	dword ptr [ebp-0x14]\n"
+			"ret"
+			: [savedClumpAssociation] "=m" (savedClumpAssociation)
+		);
+#endif
 	}
 
 	__declspec(naked) static void ProcessRiderAnims_FixInterp_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			xor		edx, edx
@@ -2358,9 +2468,30 @@ namespace QuadbikeHandlebarAnims
 			mov		[ebp-0x14], edx
 
 		FuncReturn:
-			fld		[POW_CONSTANT]
+			fld		POW_CONSTANT
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			"xor	edx, edx\n"
+			"cmp	[ebp-0x28], edx\n" // Reverse animation
+			"jne	FuncSetToZero2\n"
+			"cmp	%[savedClumpAssociation], edx\n" // Drive-by animation
+			"jne	FuncSetToZero2\n"
+			"fld    dword ptr [ebp-0x24]\n"
+			"fabs\n"
+			"fcomp	dword ptr %[SLOW_SPEED_THRESHOLD]\n"
+			"fnstsw ax\n"
+			"test   ah, 5\n"
+			"jp		FuncReturn\n"
+
+		"FuncSetToZero2:\n"
+			"mov	[ebp-0x14], edx"
+			:: [savedClumpAssociation] "m" (savedClumpAssociation),
+			[SLOW_SPEED_THRESHOLD] "m" (SLOW_SPEED_THRESHOLD)
+		);
+#endif
 	}
 
 }
@@ -2430,6 +2561,7 @@ namespace CameraMemoryLeakFix
 {
 	__declspec(naked) static void psGrabScreen_UnlockAndReleaseSurface()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			// Preserve the function result so we don't need two ASM hooks
@@ -2448,12 +2580,35 @@ namespace CameraMemoryLeakFix
 			pop		eax
 			pop		ebp
 			add		esp, 0x2C
-			retn
+			ret
 		}
+#else
+		__asm__ volatile
+		(
+			// Preserve the function result so we don't need two ASM hooks
+			"push	eax\n"
+
+			"mov	eax, [esp+0x34-0x2C]\n"
+			"mov	edx, [eax]\n"
+			"push	eax\n"
+			"call	dword ptr [edx+0x38]\n" // IDirect3DSurface9.UnlockRect
+
+			"mov	eax, [esp+0x34-0x2C]\n"
+			"mov	edx, [eax]\n"
+			"push	eax\n"
+			"call	dword ptr [edx+0x8]\n" // IDirect3DSurface9.Release
+
+			"pop	eax\n"
+			"pop	ebp\n"
+			"add	esp, 0x2C\n"
+			"ret"
+		);
+#endif
 	}
 
 	__declspec(naked) static void psGrabScreen_UnlockAndReleaseSurface_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			// Preserve the function result so we don't need two ASM hooks
@@ -2475,6 +2630,29 @@ namespace CameraMemoryLeakFix
 			pop		ebp
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			// Preserve the function result so we don't need two ASM hooks
+			"push	eax\n"
+
+			"mov	eax, [ebp-4]\n"
+			"mov	edx, [eax]\n"
+			"push	eax\n"
+			"call	dword ptr [edx+0x38]\n" // IDirect3DSurface9.UnlockRect
+
+			"mov	eax, [ebp-4]\n"
+			"mov	edx, [eax]\n"
+			"push	eax\n"
+			"call	dword ptr [edx+0x8]\n" // IDirect3DSurface9.Release
+
+			"pop	eax\n"
+			"pop	esi\n"
+			"mov	esp, ebp\n"
+			"pop	ebp\n"
+			"ret"
+		);
+#endif
 	}
 }
 
@@ -2542,6 +2720,7 @@ namespace PlayerPedDataAssignment
 {
 	__declspec(naked) static void AssignmentOp_Hoodlum()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			xor     edx, [ecx+0x34]
@@ -2591,10 +2770,62 @@ namespace PlayerPedDataAssignment
 			mov     edx, [ecx+0x34]
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			"xor    edx, [ecx+0x34]\n"
+			"and    edx, 1\n"
+			"xor    [eax+0x34], edx\n"
+			"mov    esi, [eax+0x34]\n"
+			"mov    edx, [ecx+0x34]\n"
+			"xor    edx, esi\n"
+			"and    edx, 2\n"
+			"xor    edx, esi\n"
+			"mov    [eax+0x34], edx\n"
+			"mov    esi, [ecx+0x34]\n"
+			"xor    esi, edx\n"
+			"and    esi, 4\n"
+			"xor    esi, edx\n"
+			"mov    [eax+0x34], esi\n"
+			"mov    edx, [ecx+0x34]\n"
+			"xor    edx, esi\n"
+			"and    edx, 8\n"
+			"xor    edx, esi\n"
+			"mov    [eax+0x34], edx\n"
+			"mov    esi, [ecx+0x34]\n"
+			"xor    esi, edx\n"
+			"and    esi, 0x10\n"
+			"xor    esi, edx\n"
+			"mov    [eax+0x34], esi\n"
+			"mov    edx, [ecx+0x34]\n"
+			"xor    edx, esi\n"
+			"and    edx, 0x20\n"
+			"xor    edx, esi\n"
+			"mov    [eax+0x34], edx\n"
+			"mov    esi, [ecx+0x34]\n"
+			"xor    esi, edx\n"
+			"and    esi, 0x40\n"
+			"xor    esi, edx\n"
+			"mov    [eax+0x34], esi\n"
+			"mov    edx, [ecx+0x34]\n"
+			"xor    edx, esi\n"
+			"and    edx, 0x80\n"
+			"xor    edx, esi\n"
+			"mov    [eax+0x34], edx\n"
+			"mov    esi, [ecx+0x34]\n"
+			"xor    esi, edx\n"
+			"and    esi, 0x100\n"
+			"xor    esi, edx\n"
+			"mov    [eax+0x34], esi\n"
+			"mov    edx, [ecx+0x34]\n"
+			"ret"
+		);
+#endif
 	}
 
 	__declspec(naked) static void AssignmentOp_Compact()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			call	AssignmentOp_Hoodlum
@@ -2602,6 +2833,16 @@ namespace PlayerPedDataAssignment
 			and     edx, 0x200
 			ret
 		}
+#else
+		__asm__ volatile
+		(
+			"call	%[AssignmentOp_Hoodlum]\n"
+			"xor    edx, esi\n"
+			"and    edx, 0x200\n"
+			"ret"
+			:: [AssignmentOp_Hoodlum] "i" (AssignmentOp_Hoodlum)
+		);
+#endif
 	}
 }
 
@@ -2611,6 +2852,7 @@ namespace GetCorrectPedModel_Lapdm1
 {
 	__declspec(naked) static void BikerCop_Retail()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			cmp		dword ptr [esp+4], 6
@@ -2620,10 +2862,22 @@ namespace GetCorrectPedModel_Lapdm1
 		BikerCop_Return:
 			ret		8
 		}
+#else
+		__asm__ volatile
+		(
+			"cmp	dword ptr [esp+4], 6\n"
+			"jnz	BikerCop_Return\n"
+			"mov	dword ptr [eax], 1\n"
+
+		"BikerCop_Return:\n"
+			"ret	8"
+		);
+#endif
 	}
 
 	__declspec(naked) static void BikerCop_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			cmp		dword ptr [ebp+8], 6
@@ -2634,6 +2888,18 @@ namespace GetCorrectPedModel_Lapdm1
 			pop		ebp
 			ret		8
 		}
+#else
+		__asm__ volatile
+		(
+			"cmp	dword ptr [esp+8], 6\n"
+			"jnz	BikerCop_Return2\n"
+			"mov	dword ptr [eax], 1\n"
+
+		"BikerCop_Return2:\n"
+			"pop	ebp\n"
+			"ret	8"
+		);
+#endif
 	}
 }
 
@@ -2755,6 +3021,7 @@ namespace JetpackKeyboardControlsHover
 
 	__declspec(naked) static void ProcessControlInput_HoverWithKeyboard()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			mov		ecx, ebp
@@ -2768,10 +3035,29 @@ namespace JetpackKeyboardControlsHover
 		Hovering:
 			jmp		ProcessControlInput_Hover
 		}
+#else
+		__asm__ volatile
+		(
+			"mov	ecx, ebp\n"
+			"call	%[orgGetLookBehindForCar]\n"
+			"test	al, al\n"
+			"jnz	Hovering\n"
+			"mov	ecx, ebp\n"
+			"mov	byte ptr [esi+0xD], 0\n"
+			"jmp	%[ProcessControlInput_DontHover]\n"
+
+		"Hovering:\n"
+			"jmp	%[ProcessControlInput_Hover]"
+			:: [orgGetLookBehindForCar] "m" (orgGetLookBehindForCar),
+			[ProcessControlInput_DontHover] "m" (ProcessControlInput_DontHover),
+			[ProcessControlInput_Hover] "m" (ProcessControlInput_Hover)
+		);
+#endif
 	}
 
 	__declspec(naked) static void ProcessControlInput_HoverWithKeyboard_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			mov		ecx, ebx
@@ -2785,6 +3071,20 @@ namespace JetpackKeyboardControlsHover
 		Hovering:
 			jmp		ProcessControlInput_Hover
 		}
+#else
+		__asm__ volatile
+		(
+			"mov	ecx, ebx\n"
+			"call	%[orgGetLookBehindForCar]\n"
+			"test	al, al\n"
+			"jnz	Hovering\n"
+			"mov	ecx, ebx\n"
+			"mov	byte ptr [edi+0xD], 0\n"
+			"jmp	%[ProcessControlInput_DontHover]"
+			:: [orgGetLookBehindForCar] "m" (orgGetLookBehindForCar),
+			[ProcessControlInput_DontHover] "m" (ProcessControlInput_DontHover)
+		);
+#endif
 	}
 }
 
@@ -2798,6 +3098,7 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 
 	__declspec(naked) static void CheckIfInPlayerGroupAndOnAMission()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			cmp     byte ptr [ebp+0x2D0], 1
@@ -2813,10 +3114,31 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 		NotInGroup:
 			jmp		DontSkipTargetting
 		}
+#else
+		__asm__ volatile
+		(
+			"cmp    byte ptr [ebp+0x2D0], 1\n"
+			"jne	NotInGroup\n"
+			"call	%[IsPlayerOnAMission]\n"
+			"test	al, al\n"
+			"jz		NotOnAMission\n"
+			"jmp	%[SkipTargetting]\n"
+
+		"NotOnAMission:\n"
+			"cmp    byte ptr [ebp+0x2D0], 1\n"
+
+		"NotInGroup:\n"
+			"jmp	%[DontSkipTargetting]"
+			:: [IsPlayerOnAMission] "m" (IsPlayerOnAMission),
+			[SkipTargetting] "m" (SkipTargetting),
+			[DontSkipTargetting] "m" (DontSkipTargetting)
+		);
+#endif
 	}
 
 	__declspec(naked) static void CheckIfInPlayerGroupAndOnAMission_Steam()
 	{
+#ifdef _MSC_VER
 		_asm
 		{
 			cmp     byte ptr [ebx+0x2D0], 1
@@ -2832,6 +3154,22 @@ namespace RiotDontTargetPlayerGroupDuringMissions
 		NotInGroup:
 			jmp		DontSkipTargetting
 		}
+#else
+		__asm__ volatile
+		(
+			"cmp    byte ptr [ebx+0x2D0], 1\n"
+			"jne	NotInGroup\n"
+			"call	%[IsPlayerOnAMission]\n"
+			"test	al, al\n"
+			"jz		NotOnAMission2\n"
+			"jmp	%[SkipTargetting]\n"
+
+		"NotOnAMission2:\n"
+			"cmp    byte ptr [ebx+0x2D0], 1"
+			:: [IsPlayerOnAMission] "m" (IsPlayerOnAMission),
+			[SkipTargetting] "m" (SkipTargetting)
+		);
+#endif
 	}
 }
 
