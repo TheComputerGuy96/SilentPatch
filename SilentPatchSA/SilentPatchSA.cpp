@@ -3151,7 +3151,7 @@ namespace CreditsScalingFixes
 	static const unsigned int FIXED_RES_HEIGHT_SCALE = 448;
 
 	template<std::size_t Index>
-	static void (*orgPrintString)(float,float,const wchar_t*);
+	STATIC_INLINE void (*orgPrintString)(float,float,const wchar_t*);
 
 	template<std::size_t Index>
 	static void PrintString_ScaleY(float fX, float fY, const wchar_t* pText)
@@ -3191,7 +3191,7 @@ namespace SlidingTextsScalingFixes
 		static inline bool bSlidingEnabled = false;
 
 		template<std::size_t Index>
-		static void (*orgPrintString)(float,float,const wchar_t*);
+		STATIC_INLINE void (*orgPrintString)(float,float,const wchar_t*);
 
 		template<std::size_t Index>
 		static void PrintString_Slide(float fX, float fY, const wchar_t* pText)
@@ -3201,7 +3201,7 @@ namespace SlidingTextsScalingFixes
 		}
 
 		template<std::size_t Index>
-		static void (*orgSetRightJustifyWrap)(float wrap);
+		STATIC_INLINE void (*orgSetRightJustifyWrap)(float wrap);
 
 		template<std::size_t Index>
 		static void SetRightJustifyWrap_Slide(float wrap)
@@ -3218,7 +3218,7 @@ namespace SlidingTextsScalingFixes
 		static inline bool bSlidingEnabled = false;
 
 		template<std::size_t Index>
-		static void (*orgPrintString)(float,float,const wchar_t*);
+		STATIC_INLINE void (*orgPrintString)(float,float,const wchar_t*);
 
 		template<std::size_t Index>
 		static void PrintString_Slide(float fX, float fY, const wchar_t* pText)
@@ -3579,7 +3579,7 @@ namespace FixedLineWraps
 	struct WrapInternal
 	{
 		template<std::size_t Index>
-		static void (*orgWrapFunction)(float);
+		STATIC_INLINE void (*orgWrapFunction)(float);
 
 		template<std::size_t Index>
 		static void WrapFunction_LeftAlign(float fLength)
