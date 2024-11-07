@@ -176,6 +176,14 @@ enum eDoors
 
 #define FLAG_HYDRAULICS_INSTALLED 0x20000
 
+void ReadRotorFixExceptions(const wchar_t* pPath);
+void ReadLightbeamFixExceptions(const wchar_t* pPath);
+
+namespace LightbeamFix
+{
+	void SetCurrentVehicle( CVehicle* vehicle );
+}
+
 class NOVMT CVehicle	: public CPhysical
 {
 protected:
@@ -462,14 +470,6 @@ public:
 private:
 	CVehicle* RestoreCar_LoadBombOwnership(CVehicle* vehicle);
 };
-
-void ReadRotorFixExceptions(const wchar_t* pPath);
-void ReadLightbeamFixExceptions(const wchar_t* pPath);
-
-namespace LightbeamFix
-{
-	void SetCurrentVehicle( CVehicle* vehicle );
-}
 
 static_assert(sizeof(CDoor) == 0x18, "Wrong size: CDoor");
 static_assert(sizeof(CBouncingPanel) == 0x20, "Wrong size: CBouncingPanel");
