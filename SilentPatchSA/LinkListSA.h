@@ -4,7 +4,7 @@
 template <class T>
 class CLinkSA
 {
-	template <class T>
+	template <class U>
 	friend class CLinkListSA;
 
 public:
