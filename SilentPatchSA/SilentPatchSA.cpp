@@ -1359,9 +1359,9 @@ namespace CV
 {
 	namespace Funcs
 	{
-		static decltype(InitializeConditionVariable)* pInitializeConditionVariable = nullptr;
-		static decltype(SleepConditionVariableCS)* pSleepConditionVariableCS = nullptr;
-		static decltype(WakeConditionVariable)* pWakeConditionVariable = nullptr;
+		static VOID WINAPI (*pInitializeConditionVariable)(PCONDITION_VARIABLE) = nullptr;
+		static WINBOOL WINAPI (*pSleepConditionVariableCS)(PCONDITION_VARIABLE, PCRITICAL_SECTION, DWORD) = nullptr;
+		static VOID WINAPI (*pWakeConditionVariable)(PCONDITION_VARIABLE) = nullptr;
 
 		static bool TryInit()
 		{
