@@ -5463,6 +5463,7 @@ BOOL InjectDelayedPatches_10()
 			Nop( 0x4C9239+9, 1 );
 		}
 
+#ifndef NO_INLINE_OPERAND_ASM
 		if ( *(DWORD*)0x4065BB == 0x3B0BE1C1 )
 		{
 			// Handle IMGs bigger than 4GB
@@ -5471,6 +5472,7 @@ BOOL InjectDelayedPatches_10()
 			InjectHook( 0x4065C2+1, CdStreamThreadHighSize, HookType::Call );
 			Patch<const void*>( 0x406620+2, &pCdStreamSetFilePointer );
 		}
+#endif
 
 
 		// Fix directional light position
@@ -5556,6 +5558,7 @@ BOOL InjectDelayedPatches_10()
 			}
 		}
 
+#ifndef NO_INLINE_OPERAND_ASM
 		// True invincibility - not being hurt by Police Maverick bullets anymore
 		if ( !bSAMP )
 		{
@@ -5579,6 +5582,7 @@ BOOL InjectDelayedPatches_10()
 				}
 			}
 		}
+#endif
 
 		// Moonphases
 		// Not taking effect with new skygfx since aap has it too now
@@ -6305,6 +6309,7 @@ BOOL InjectDelayedPatches_NewBinaries()
 			}
 			TXN_CATCH();
 
+#ifndef NO_INLINE_OPERAND_ASM
 			// Cursor X/Y scaling need to be done differently than in 1.0, as the game has one fld1 for width and one fld1 for height
 			try
 			{
@@ -6318,6 +6323,7 @@ BOOL InjectDelayedPatches_NewBinaries()
 				InjectHook(scaleY.get<void>(1), ScaleY_NewBinaries, HookType::Call);
 			}
 			TXN_CATCH();
+#endif
 		}
 
 
@@ -6412,16 +6418,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 	Patch<const void*>(0x6FB97A, &pRefFal);
 	Patch<BYTE>(0x6FB9A0, 0);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Plane rotors
 	InjectHook(0x4C7981, PlaneAtomicRendererSetup, HookType::Jump);
+#endif
 
 	// DOUBLE_RWHEELS
 	Patch<WORD>(0x4C9290, 0xE281);
 	Patch<int>(0x4C9292, ~(rwMATRIXTYPEMASK|rwMATRIXINTERNALIDENTITY));
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// A fix for DOUBLE_RWHEELS trailers
 	InjectHook(0x4C9223, TrailerDoubleRWheelsFix, HookType::Jump);
 	InjectHook(0x4C92F4, TrailerDoubleRWheelsFix2, HookType::Jump);
+#endif
 
 	// No framedelay
 	Patch<WORD>(0x53E923, 0x43EB);
@@ -6436,16 +6446,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 	// Make sure DirectInput mouse device is set non-exclusive (may not be needed?)
 	Patch<DWORD>(AddressByRegion_10<DWORD>(0x7469A0), 0x9090C030);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Hunter interior & static_rotor for helis
 	InjectHook(0x4C78F2, HunterTest, HookType::Jump);
 	InjectHook(0x4C9618, CacheCRC32);
+#endif
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Fixed blown up car rendering
 	// ONLY 1.0
 	InjectHook(0x5D993F, DarkVehiclesFix1);
 	InjectHook(0x5D9A74, DarkVehiclesFix2, HookType::Jump);
 	InjectHook(0x5D9B44, DarkVehiclesFix3, HookType::Jump);
 	InjectHook(0x5D9CB2, DarkVehiclesFix4, HookType::Jump);
+#endif
 
 	// Bindable NUM5
 	// Only 1.0 and Steam
@@ -6518,10 +6532,12 @@ void Patch_SA_10(HINSTANCE hInstance)
 	// Heap corruption fix
 	Nop(0x5C25D3, 5);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// User Tracks fix
 	ReadCall( 0x4D9B66, SetVolume );
 	InjectHook(0x4D9B66, UserTracksFix);
 	InjectHook(0x4D9BB5, 0x4F2FD0);
+#endif
 
 #ifndef NO_FLAC_SUPPORT
 	// FLAC support
@@ -6783,16 +6799,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 	strcpy_s(pScannerNames + (8*134), 8, "????");
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// AI accuracy issue
 	Nop(0x73B3AE, 1);
 	InjectHook( 0x73B3AE + 1, WeaponRangeMult_VehicleCheck, HookType::Call );
+#endif
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// New timers fix
 	InjectHook( 0x561C32, asmTimers_ftol_PauseMode );
 	InjectHook( 0x561902, asmTimers_ftol_NonClipped );
 	InjectHook( 0x56191A, asmTimers_ftol );
 	InjectHook( 0x46A036, asmTimers_SCMdelta );
+#endif
 
 
 	// Don't catch WM_SYSKEYDOWN and WM_SYSKEYUP (fixes Alt+F4)
@@ -6982,6 +7002,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	}
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Firela animations
 	{
 		using namespace FirelaHook;
@@ -6994,6 +7015,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 		FollowCarCamJmpBack = 0x5254F6 + 6;
 		InjectHook( 0x5254F6, CamControlFirela, HookType::Jump );
 	}
+#endif
 
 
 	// Double artict3 trailer
@@ -7130,10 +7152,12 @@ void Patch_SA_10(HINSTANCE hInstance)
 	Nop(0x5E69BC + 5, 3);
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Tie handlebar movement to the stering animations on Quadbike, fixes odd animation interpolations at low speeds
 	// By Wesser
 	Nop(0x6B7932, 1);
 	InjectHook(0x6B7932+1, &QuadbikeHandlebarAnims::ProcessRiderAnims_FixInterp, HookType::Call);
+#endif
 
 
 	// Disable the radio station change anim on boats where CJ stands upright
@@ -7215,11 +7239,13 @@ void Patch_SA_10(HINSTANCE hInstance)
 		{
 			InjectHook(placeToPatch, AssignmentOp_Hoodlum, HookType::Call);
 		}
+#ifndef NO_INLINE_OPERAND_ASM
 		else
 		{
 			InjectHook(placeToPatch, AssignmentOp_Compact, HookType::Call);
 			Nop(placeToPatch + 5, 3);
 		}
+#endif
 	}
 
 
@@ -7298,6 +7324,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	}
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Allow hovering on the Jetpack with Keyboard + Mouse controls
 	// Does not modify any other controls, only hovering
 	{
@@ -7310,8 +7337,10 @@ void Patch_SA_10(HINSTANCE hInstance)
 		InjectHook(0x67ED2D + 1, &ProcessControlInput_HoverWithKeyboard, HookType::Jump);
 		ReadCall(0x67EDA6, orgGetLookBehindForCar);
 	}
+#endif
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// During riots, don't target the player group during missions
 	// Fixes recruited homies panicking during Los Desperados and other riot-time missions
 	{
@@ -7321,6 +7350,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 		SkipTargetting = (void*)0x6CD7F4;
 		InjectHook(0x6CD545, CheckIfInPlayerGroupAndOnAMission, HookType::Jump);
 	}
+#endif
 
 
 	// Rescale light switching randomness in CVehicle::GetVehicleLightsStatus for PC the randomness range
@@ -7566,16 +7596,20 @@ void Patch_SA_11()
 	Patch<const void*>(0x6FC1AA, &pRefFal);
 	Patch<BYTE>(0x6FC1D0, 0);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Plane rotors
 	InjectHook(0x4C7A01, PlaneAtomicRendererSetup, HookType::Jump);
+#endif
 
 	// DOUBLE_RWHEELS
 	Patch<WORD>(0x4C9490, 0xE281);
 	Patch<int>(0x4C9492, ~(rwMATRIXTYPEMASK|rwMATRIXINTERNALIDENTITY));
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// A fix for DOUBLE_RWHEELS trailers
 	InjectHook(0x4C9423, TrailerDoubleRWheelsFix, HookType::Jump);
 	InjectHook(0x4C94F4, TrailerDoubleRWheelsFix2, HookType::Jump);
+#endif
 
 	// No framedelay
 	Patch<WORD>(0x53EDC3, 0x43EB);
@@ -7590,9 +7624,11 @@ void Patch_SA_11()
 	// Make sure DirectInput mouse device is set non-exclusive (may not be needed?)
 	Patch<DWORD>(AddressByRegion_11<DWORD>(0x747270), 0x9090C030);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Hunter interior & static_rotor for helis
 	InjectHook(0x4C7972, HunterTest, HookType::Jump);
 	InjectHook(0x4C9818, CacheCRC32);
+#endif
 
 	// Lightbeam fix
 	// Removed in Build 30 because the fix has been revisited
@@ -7640,10 +7676,12 @@ void Patch_SA_11()
 	// Heap corruption fix
 	Patch<BYTE>(0x4A9D50, 0xC3);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// User Tracks fix
 	ReadCall( 0x4DA057, SetVolume );
 	InjectHook(0x4DA057, UserTracksFix);
 	InjectHook(0x4DA0A5, 0x4F3430);
+#endif
 
 #ifndef NO_FLAC_SUPPORT
 	// FLAC support
@@ -7912,16 +7950,20 @@ void Patch_SA_Steam()
 	Patch<const void*>(0x733FF0, &pRefFal);
 	Patch<BYTE>(0x73401A, 0);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Plane rotors
 	InjectHook(0x4D2270, PlaneAtomicRendererSetup, HookType::Jump);
+#endif
 
 	// DOUBLE_RWHEELS
 	Patch<WORD>(0x4D3B9D, 0x6781);
 	Patch<int>(0x4D3BA0, ~(rwMATRIXTYPEMASK|rwMATRIXINTERNALIDENTITY));
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// A fix for DOUBLE_RWHEELS trailers
 	InjectHook(0x4D3B47, TrailerDoubleRWheelsFix_Steam, HookType::Jump);
 	InjectHook(0x4D3C1A, TrailerDoubleRWheelsFix2_Steam, HookType::Jump);
+#endif
 
 	// No framedelay
 	Patch<WORD>(0x551113, 0x46EB);
@@ -7936,9 +7978,11 @@ void Patch_SA_Steam()
 	// Make sure DirectInput mouse device is set non-exclusive (may not be needed?)
 	Patch<DWORD>(0x7807D0, 0x9090C030);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Hunter interior & static_rotor for helis
 	InjectHook(0x4D21E1, HunterTest, HookType::Jump);
 	InjectHook(0x4D3F1D, CacheCRC32);
+#endif
 
 	// Bindable NUM5
 	// Only 1.0 and Steam
@@ -7979,11 +8023,13 @@ void Patch_SA_Steam()
 	// Heap corruption fix
 	Nop(0x5D88AE, 5);
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// User Tracks fix
 	SetVolume = reinterpret_cast<decltype(SetVolume)>(0x4E2750);
 	Patch<BYTE>(0x4E4A28, 0xBA);
 	Patch<const void*>(0x4E4A29, reinterpret_cast<const void*>(UserTracksFix_Steam));
 	InjectHook(0x4E4A8B, 0x4FF2B0);
+#endif
 
 #ifndef NO_FLAC_SUPPORT
 	// FLAC support
@@ -8228,9 +8274,11 @@ void Patch_SA_Steam()
 	Patch<WORD>(0x43D24D, 0x016A);
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// AI accuracy issue
 	Nop(0x7738F5, 1);
 	InjectHook( 0x7738F5+1, WeaponRangeMult_VehicleCheck, HookType::Call );
+#endif
 
 
 	// Don't catch WM_SYSKEYDOWN and WM_SYSKEYUP (fixes Alt+F4)
@@ -8794,6 +8842,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 	TXN_CATCH();
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// AI accuracy issue
 	try
 	{
@@ -8802,6 +8851,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 		InjectHook( match.get<int>(1), WeaponRangeMult_VehicleCheck, HookType::Call );
 	}
 	TXN_CATCH();
+#endif
 
 
 	// Don't catch WM_SYSKEYDOWN and WM_SYSKEYUP (fixes Alt+F4)
@@ -9229,6 +9279,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 	TXN_CATCH();
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Tie handlebar movement to the stering animations on Quadbike, fixes odd animation interpolations at low speeds
 	// By Wesser
 	try
@@ -9244,6 +9295,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 		InjectHook(saveDriveByAnim.get<void>(1), &QuadbikeHandlebarAnims::SaveDriveByAnim_Steam, HookType::Call);
 	}
 	TXN_CATCH();
+#endif
 
 
 	// Disable the radio station change anim on boats where CJ stands upright
@@ -9384,6 +9436,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 	TXN_CATCH();
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// Allow hovering on the Jetpack with Keyboard + Mouse controls
 	// Does not modify any other controls, only hovering
 	try
@@ -9401,8 +9454,10 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 		ReadCall(processControl_DoHover.get<void>(), orgGetLookBehindForCar);
 	}
 	TXN_CATCH();
+#endif
 
 
+#ifndef NO_INLINE_OPERAND_ASM
 	// During riots, don't target the player group during missions
 	// Fixes recruited homies panicking during Los Desperados and other riot-time missions
 	try
@@ -9417,6 +9472,7 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 		InjectHook(targettingCheck.get<void>(), CheckIfInPlayerGroupAndOnAMission_Steam, HookType::Jump);
 	}
 	TXN_CATCH();
+#endif
 
 
 	// Rescale light switching randomness in CVehicle::GetVehicleLightsStatus for PC the randomness range
