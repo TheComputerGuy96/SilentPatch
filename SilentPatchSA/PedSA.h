@@ -9,10 +9,10 @@ class CPed;
 class CVehicle;
 
 // This structure is very incomplete, but it is good enough for now
-class __declspec(novtable) CTask
+class NOVMT CTask
 {
 public:
-	virtual ~CTask();
+	virtual ~CTask() { }
 	virtual CTask* Clone() const = 0;
 	virtual CTask* GetSubTask() const = 0;
 	virtual bool IsSimpleTask() const = 0;
@@ -25,34 +25,34 @@ public:
 };
 static_assert(sizeof(CTask) == 0x8, "Wrong size: CTask");
 
-class __declspec(novtable) CTaskSimple : public CTask
+class NOVMT CTaskSimple : public CTask
 {
 public:
 	virtual bool IsSimpleTask() const override { return true; }
 	virtual bool SetPedPosition(CPed*) { return false; }
 };
 
-class __declspec(novtable) CTaskComplex : public CTask
+class NOVMT CTaskComplex : public CTask
 {
 private:
 	CTask* m_pSubTask;
 
 public:
 	virtual bool IsSimpleTask() const override { return false; }
-	virtual void SetSubTask(CTask*);
+	virtual void SetSubTask(CTask*) = 0;
 	virtual CTask* CreateNextSubTask(CPed*) = 0;
 	virtual CTask* CreateFirstSubTask(CPed*) = 0;
 	virtual CTask* ControlSubTask(CPed*) = 0;
 };
 
 // Stub
-class __declspec(novtable) CTaskSimpleJetPack : public CTaskSimple
+class NOVMT CTaskSimpleJetPack : public CTaskSimple
 {
 public:
 	void			RenderJetPack(class CPed* pPed);
 };
 
-class __declspec(novtable) CTaskComplexSequence : public CTaskComplex
+class NOVMT CTaskComplexSequence : public CTaskComplex
 {
 public:
 	bool Contains(int taskID) const;
@@ -64,7 +64,7 @@ public:
 };
 static_assert(sizeof(CTaskComplexSequence) == 0x40, "Wrong size: CTaskComplexSequence");
 
-class __declspec(novtable) CTaskComplexCarSlowBeDraggedOut : public CTaskComplex
+class NOVMT CTaskComplexCarSlowBeDraggedOut : public CTaskComplex
 {
 public:
 	CVehicle* m_pVehicle;
@@ -345,8 +345,8 @@ public:
 	inline bool			Load_Stub()
 		{ return CPed::Load(); }
 
-	virtual bool		Save();
-	virtual bool		Load();
+	virtual bool		Save() = 0;
+	virtual bool		Load() = 0;
 
 	inline DWORD		GetPedType() 
 							{ return pedType; };
