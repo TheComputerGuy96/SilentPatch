@@ -2,6 +2,8 @@
 
 #include "AudioHardwareSA.h"
 
+#ifndef NO_FLAC_SUPPORT
+
 // libflac
 #include "FLAC/stream_decoder.h"
 #include "FLAC/metadata.h"
@@ -46,3 +48,5 @@ public:
 	virtual uint32_t		GetStreamID() const override
 	{ return GetStream()->GetID(); }
 };
+
+#endif
