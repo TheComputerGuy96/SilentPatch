@@ -178,17 +178,17 @@ public:
 	virtual CAtomicModelInfo*		AsAtomicModelInfoPtr() { return nullptr; }
     virtual CDamageAtomicModelInfo*	AsDamageAtomicModelInfoPtr() { return nullptr; }
     virtual CLodAtomicModelInfo*	AsLodAtomicModelInfoPtr() { return nullptr; }
-    virtual unsigned char			GetModelType()=0;
-	virtual CTimeInfo*				GetTimeInfo() { return nullptr; }
-    virtual void					Init();
+    virtual unsigned char			GetModelType() = 0;
+    virtual CTimeInfo*				GetTimeInfo() { return nullptr; }
+    virtual void					Init() = 0;
     virtual void					Shutdown();
-    virtual void					DeleteRwObject()=0;
-    virtual int						GetRwModelType()=0;
-	virtual RpAtomic*				CreateInstance_(RwMatrix* pMatrix)=0;
-    virtual RpAtomic*				CreateInstance()=0;
-	virtual void					SetAnimFile(const char* pName) { UNREFERENCED_PARAMETER(pName); }
-	virtual void					ConvertAnimFileIndex() {}
-	virtual int						GetAnimFileIndex() { return -1; }
+    virtual void					DeleteRwObject() = 0;
+    virtual int						GetRwModelType() = 0;
+    virtual RpAtomic*				CreateInstance_(RwMatrix* pMatrix) = 0;
+    virtual RpAtomic*				CreateInstance() = 0;
+    virtual void					SetAnimFile(const char* pName) { UNREFERENCED_PARAMETER(pName); }
+    virtual void					ConvertAnimFileIndex() {}
+    virtual int						GetAnimFileIndex() { return -1; }
 
 	CBaseModelInfo()
 		: usNumberOfRefs(0), usTextureDictionary(-1)
@@ -210,16 +210,16 @@ public:
 
 public:
 	virtual unsigned char			GetModelType() override { return 5; }
-	virtual void					Init() override;
-	virtual void					DeleteRwObject() override;
+	virtual void					Init() override = 0;
+	virtual void					DeleteRwObject() override = 0;
 	virtual int						GetRwModelType() override { return rpCLUMP; }
-	virtual RpAtomic*				CreateInstance_(RwMatrix* pMatrix) override;
-	virtual RpAtomic*				CreateInstance() override;
-	virtual void					SetAnimFile(const char* pName) override;
-	virtual void					ConvertAnimFileIndex() override;
+	virtual RpAtomic*				CreateInstance_(RwMatrix* pMatrix) override = 0;
+	virtual RpAtomic*				CreateInstance() override = 0;
+	virtual void					SetAnimFile(const char* pName) override = 0;
+	virtual void					ConvertAnimFileIndex() override = 0;
 	virtual int						GetAnimFileIndex() override { return nAnimIndex; }
 	virtual CColModel*				GetBoundingBox() { return pColModel; }
-	virtual void					SetClump(RpClump* pClump);
+	virtual void					SetClump(RpClump* pClump) = 0;
 };
 
 class NOVMT CVehicleModelInfo : public CClumpModelInfo

@@ -67,27 +67,27 @@ enum // nStatus
 class NOVMT CEntity	: public CPlaceable
 {
 public:
-    virtual void	Add_CRect();
-    virtual void	Add();
-    virtual void	Remove();
-    virtual void	SetIsStatic(bool);
-    virtual void	SetModelIndex(int nModelIndex);
-    virtual void	SetModelIndexNoCreate(int nModelIndex);
-    virtual void	CreateRwObject();
-    virtual void	DeleteRwObject();
-    virtual CRect	GetBoundRect();
-    virtual void	ProcessControl();
-    virtual void	ProcessCollision();
-    virtual void	ProcessShift();
-    virtual void	TestCollision();
-    virtual void	Teleport();
-    virtual void	SpecialEntityPreCollisionStuff();
-    virtual void	SpecialEntityCalcCollisionSteps();
-    virtual void	PreRender();
+    virtual void	Add_CRect() = 0;
+    virtual void	Add() = 0;
+    virtual void	Remove() = 0;
+    virtual void	SetIsStatic(bool) = 0;
+    virtual void	SetModelIndex(int nModelIndex) = 0;
+    virtual void	SetModelIndexNoCreate(int nModelIndex) = 0;
+    virtual void	CreateRwObject() = 0;
+    virtual void	DeleteRwObject() = 0;
+    virtual CRect	GetBoundRect() = 0;
+    virtual void	ProcessControl() = 0;
+    virtual void	ProcessCollision() = 0;
+    virtual void	ProcessShift() = 0;
+    virtual void	TestCollision() = 0;
+    virtual void	Teleport() = 0;
+    virtual void	SpecialEntityPreCollisionStuff() = 0;
+    virtual void	SpecialEntityCalcCollisionSteps() = 0;
+    virtual void	PreRender() = 0;
     virtual void	Render();
-    virtual void	SetupLighting();
-    virtual void	RemoveLighting(bool bRemove=true);
-    virtual void	FlagToDestroyWhenNextProcessed();
+    virtual void	SetupLighting() = 0;
+    virtual void	RemoveLighting(bool bRemove = true) = 0;
+    virtual void	FlagToDestroyWhenNextProcessed() = 0;
 
 //private:
 	RpClump*		m_pRwObject;						// 0x18
@@ -237,7 +237,7 @@ private:
     BYTE			pad3a[4];								// 0x134
 
 public:
-	virtual void*	ProcessEntityCollision(CEntity*, void*);
+	virtual void*	ProcessEntityCollision(CEntity*, void*) = 0;
 };
 
 enum // m_objectCreatedBy
