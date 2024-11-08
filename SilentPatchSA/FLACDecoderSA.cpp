@@ -2,6 +2,8 @@
 #include "FLACDecoderSA.h"
 #include <algorithm>
 
+#ifndef NO_FLAC_SUPPORT
+
 FLAC__StreamDecoderReadStatus CAEFLACDecoder::read_cb(const FLAC__StreamDecoder* decoder, FLAC__byte buffer[], size_t* bytes, void* client_data)
 {
 	UNREFERENCED_PARAMETER(decoder);
@@ -241,3 +243,5 @@ CAEFLACDecoder::~CAEFLACDecoder()
 	}
 	delete[] m_buffer;
 }
+
+#endif

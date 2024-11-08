@@ -521,6 +521,7 @@ void RenderWeaponPedsForPC()
 	}
 }
 
+#ifndef NO_FLAC_SUPPORT
 static CAEFLACDecoder* __stdcall DecoderCtor(CAEDataStream* pData)
 {
 	return new CAEFLACDecoder(pData);
@@ -530,6 +531,7 @@ static CAEWaveDecoder* __stdcall CAEWaveDecoderInit(CAEDataStream* pStream)
 {
 	return new CAEWaveDecoder(pStream);
 }
+#endif
 
 namespace UIScales
 {
@@ -4787,6 +4789,8 @@ void __thiscall CAEDataStreamNew_dtor(CAEDataStreamNew* stream)
 }
 #endif
 
+#ifndef NO_FLAC_SUPPORT
+
 static void*	LoadFLAC_JumpBack = AddressByVersion<void*>(0x4F3743, Memory::GetVersion().version == 1 ? (*(BYTE*)0x4F3A50 == 0x6A ? 0x4F3BA3 : 0x5B6B81) : 0, 0x4FFC3F);
 __declspec(naked) void LoadFLAC()
 {
@@ -5024,6 +5028,8 @@ __declspec(naked) void LoadFLAC_Steam()
 	);
 #endif
 }
+
+#endif // NO_FLAC_SUPPORT
 
 __declspec(naked) void FLACInit()
 {
@@ -7086,6 +7092,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	InjectHook(0x4D9B66, UserTracksFix);
 	InjectHook(0x4D9BB5, 0x4F2FD0);
 
+#ifndef NO_FLAC_SUPPORT
 	// FLAC support
 	InjectHook(0x4F373D, LoadFLAC, HookType::Jump);
 	InjectHook(0x57BEFE, FLACInit);
@@ -7097,6 +7104,7 @@ void Patch_SA_10(HINSTANCE hInstance)
 	Patch<const void*>(0x4F3241, &UserTrackExtensions->Codec);
 	Patch<const void*>(0x4F35E7, &UserTrackExtensions[1].Codec);
 	Patch<BYTE>(0x4F322D, sizeof(UserTrackExtensions));
+#endif
 
 	// Impound garages working correctly
 	InjectHook(0x425179, 0x448990); // CGarages::IsPointWithinAnyGarage
@@ -8352,6 +8360,7 @@ void Patch_SA_11()
 	InjectHook(0x4DA057, UserTracksFix);
 	InjectHook(0x4DA0A5, 0x4F3430);
 
+#ifndef NO_FLAC_SUPPORT
 	// FLAC support
 	InjectHook(0x57C566, FLACInit);
 	if ( *(BYTE*)0x4F3A50 == 0x6A )
@@ -8382,6 +8391,7 @@ void Patch_SA_11()
 		Patch<WORD>(0x4EBD2A, 0x72EB);
 		Patch<BYTE>(0x4EBDC0, sizeof(UserTrackExtensions));
 	}
+#endif
 
 	// Impound garages working correctly
 	InjectHook(0x4251F9, 0x448A10);
@@ -8705,6 +8715,7 @@ void Patch_SA_Steam()
 	Patch<const void*>(0x4E4A29, reinterpret_cast<const void*>(UserTracksFix_Steam));
 	InjectHook(0x4E4A8B, 0x4FF2B0);
 
+#ifndef NO_FLAC_SUPPORT
 	// FLAC support
 	InjectHook(0x4FFC39, LoadFLAC_Steam, HookType::Jump);
 	InjectHook(0x591814, FLACInit_Steam);
@@ -8715,6 +8726,7 @@ void Patch_SA_Steam()
 	Patch<const void*>(0x4FF523, &UserTrackExtensions->Codec);
 	Patch<const void*>(0x4FFAB6, &UserTrackExtensions[1].Codec);
 	Patch<BYTE>(0x4FF50F, sizeof(UserTrackExtensions));
+#endif
 
 	// Impound garages working correctly
 	InjectHook(0x426B48, 0x44C950);
