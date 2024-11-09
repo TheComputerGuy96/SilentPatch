@@ -2614,7 +2614,7 @@ namespace NewResolutionSelectionDialog
 	static bool ShouldSkipDeviceSelection()
 	{
 		char cTmpPath[MAX_PATH];
-		PathCombineA(cTmpPath, GetMyDocumentsPathSA(), SettingsFileName);
+		PathCombineA(cTmpPath, orgGetDocumentsPath(), SettingsFileName);
 
 		bool bSkip = false;
 
@@ -2631,7 +2631,7 @@ namespace NewResolutionSelectionDialog
 	static void RememberDeviceSelection(bool bDoNotShowAgain)
 	{
 		char cTmpPath[MAX_PATH];
-		PathCombineA(cTmpPath, GetMyDocumentsPathSA(), SettingsFileName);
+		PathCombineA(cTmpPath, orgGetDocumentsPath(), SettingsFileName);
 
 		FILE* hFile = nullptr;
 		if (fopen_s(&hFile, cTmpPath, "w") == 0)
