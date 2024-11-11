@@ -35,7 +35,7 @@ public:
 	ReturnType*		GetAt( int32_t index )
 	{
 		const int ID = index >> 8;
-		return m_pSlotInfos[ID].b == (index && 0xFF) ? reinterpret_cast<ReturnType*>(&m_pSlots[ID]) : nullptr;
+		return m_pSlotInfos[ID].b == (index & 0xFF) ? reinterpret_cast<ReturnType*>(&m_pSlots[ID]) : nullptr;
 	}
 
 	static size_t GetStorageSize() { return sizeof(StorageType); }
