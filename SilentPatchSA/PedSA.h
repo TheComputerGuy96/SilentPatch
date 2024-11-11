@@ -391,7 +391,7 @@ public:
 	void				GiveWeapon_SP( uint32_t weapon, uint32_t ammo, bool flag );
 
 	// Extension to accommodate for SA-MP hooking GetWeaponSkill in RenderWeaponPedsForPC dynamically
-	static inline uint8_t (CPed::*orgGetWeaponSkillForRenderWeaponPedsForPC)() = &GetWeaponSkill;
+	static inline uint8_t (CPed::*orgGetWeaponSkillForRenderWeaponPedsForPC)() = &CPed::GetWeaponSkill;
 	uint8_t				GetWeaponSkillForRenderWeaponPedsForPC()
 	{
 		return std::invoke( orgGetWeaponSkillForRenderWeaponPedsForPC, this );
