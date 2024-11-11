@@ -17,7 +17,7 @@ enum eDecoderType
 };
 
 // 1.0/Steam structure
-class NOVMT CAEDataStreamOld final : IStream
+class NOVMT CAEDataStreamOld : IStream
 {
 private:
 	HANDLE			hHandle;
@@ -71,7 +71,7 @@ public:
 };
 
 // 1.01 structure
-class NOVMT CAEDataStreamNew final : IStream
+class NOVMT CAEDataStreamNew : IStream
 {
 private:
 	void*			pUselessMalloc;
