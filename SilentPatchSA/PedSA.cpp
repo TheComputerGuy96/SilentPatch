@@ -133,7 +133,7 @@ bool CTaskComplexSequence::Contains(int taskID) const
 {
 	for (CTask* task : m_taskSequence)
 	{
-		if (task->GetTaskType() == taskID)
+		if (task != nullptr && task->GetTaskType() == taskID)
 		{
 			return true;
 		}
