@@ -229,6 +229,16 @@ namespace Common {
 			}
 			TXN_CATCH();
 
+			// III: Patch the icon handle to fix missing window icon
+			// (This is fixed since VC)
+			try
+			{
+				auto addr = get_pattern("c7 44 24 1c 00 00 00 00 c7 44 24 08 00 20 00", 0x4);
+				HICON wndIconIII = LoadIconA(GetModuleHandleA(nullptr), MAKEINTRESOURCEA(0x412)); // Group icon ID
+
+				Patch<HICON>(addr, wndIconIII);
+			}
+			TXN_CATCH();
 
 			// No censorships
 			try
