@@ -71,6 +71,7 @@ All the remaining, non-critical fixes.
 * Detached limbs now have properly working LODs, instead of rendering the normal and low-detail models at the same time.
 * Low Brightness options now load and save correctly, instead of reverting to overly bright values.
 * Support for the `brakelights` dummy has been restored, allowing brake and reverse lights to work as they did in the PS2 version, rather than always sharing the same placement with the tail lights.
+* The correct window icon is now displayed.
 * ⚙️ Fixed siren corona placements in Firetruck, Ambulance, and Enforcer.
 * ⚙️ Fixed taxi light corona placement for Taxi.
 * ⚙️ Fixed police chopper's searchlight placement.
