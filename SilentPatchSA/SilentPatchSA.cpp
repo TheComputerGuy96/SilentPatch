@@ -6115,13 +6115,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 		bool HoodlumPatched = false;
 		if (*reinterpret_cast<const uint8_t*>(0x41BFA0) == 0xE9)
 		{
+			// Since this function differs between EU and US Hoodlum, exceptionally use patterns
+			using namespace hook::txn;
+
 			uintptr_t backToCruisingIfNoWantedLevel_Obfuscated;
 			ReadCall(0x41BFA0, backToCruisingIfNoWantedLevel_Obfuscated);
-			if (ModCompat::Utils::GetModuleHandleFromAddress(backToCruisingIfNoWantedLevel_Obfuscated) == hInstance)
+			if (ModCompat::Utils::GetModuleHandleFromAddress(backToCruisingIfNoWantedLevel_Obfuscated) == hInstance) try
 			{
-				VP::InterceptCall(backToCruisingIfNoWantedLevel_Obfuscated + 0x86, orgJoinCarWithRoadSystem, JoinCarWithRoadSystem_AbortDriveByTask);
+				auto joinCarWithRoadSystem = make_range_pattern(backToCruisingIfNoWantedLevel_Obfuscated, backToCruisingIfNoWantedLevel_Obfuscated + 0x100,
+					"56 E8 ? ? ? ? 8A 96 2D 04 00 00").get_first<void>(1);
+
+				VP::InterceptCall(joinCarWithRoadSystem, orgJoinCarWithRoadSystem, JoinCarWithRoadSystem_AbortDriveByTask);
 				HoodlumPatched = true;
 			}
+			TXN_CATCH();
 		}
 		if (!HoodlumPatched)
 		{
@@ -6203,13 +6210,20 @@ void Patch_SA_10(HINSTANCE hInstance)
 		bool HoodlumPatched = false;
 		if (*reinterpret_cast<const uint8_t*>(0x45CEA0) == 0xE9)
 		{
+			// Since this function differs between EU and US Hoodlum, exceptionally use patterns
+			using namespace hook::txn;
+
 			uintptr_t DealWithNewPedPacket_Obfuscated;
 			ReadCall(0x45CEA0, DealWithNewPedPacket_Obfuscated);
-			if (ModCompat::Utils::GetModuleHandleFromAddress(DealWithNewPedPacket_Obfuscated) == hInstance)
+			if (ModCompat::Utils::GetModuleHandleFromAddress(DealWithNewPedPacket_Obfuscated) == hInstance) try
 			{
-				InterceptCall(DealWithNewPedPacket_Obfuscated + 0xF8, orgRebuildPlayer, RebuildPlayer_LoadAllMotionGroupAnims);
+				auto DealWithNewPedPacket = make_range_pattern(DealWithNewPedPacket_Obfuscated, DealWithNewPedPacket_Obfuscated + 0x200,
+					"6A 01 56 E8 ? ? ? ? 83 C4 10").get_first<void>(3);
+
+				VP::InterceptCall(DealWithNewPedPacket, orgRebuildPlayer, RebuildPlayer_LoadAllMotionGroupAnims);
 				HoodlumPatched = true;
 			}
+			TXN_CATCH();
 		}
 
 		if (!HoodlumPatched)

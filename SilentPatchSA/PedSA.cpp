@@ -131,7 +131,7 @@ uint8_t CPed::GetWeaponSkillForRenderWeaponPedsForPC_SAMP()
 
 bool CTaskComplexSequence::Contains(int taskID) const
 {
-	for (CTask* task : m_taskSequence)
+	for (const CTask* task : m_taskSequence)
 	{
 		if (task != nullptr && task->GetTaskType() == taskID)
 		{
