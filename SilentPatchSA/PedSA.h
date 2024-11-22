@@ -12,7 +12,11 @@ class CVehicle;
 class NOVMT CTask
 {
 public:
+#ifdef _MSC_VER
 	virtual ~CTask() { }
+#else
+	virtual void dummy_dtor() { }
+#endif
 	virtual CTask* Clone() const = 0;
 	virtual CTask* GetSubTask() const = 0;
 	virtual bool IsSimpleTask() const = 0;

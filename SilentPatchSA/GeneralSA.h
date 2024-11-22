@@ -21,7 +21,11 @@ private:
 
 public:
 	// Line up the VMTs
+#ifdef _MSC_VER
 	virtual ~CPlaceable() {}
+#else
+	virtual void dummy_dtor() {}
+#endif
 
 	inline CPlaceable() {}
 

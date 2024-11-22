@@ -174,7 +174,11 @@ public:
     RwObject*               pRwObject;                  // +28
 
 public:
+#ifdef _MSC_VER
 	virtual							~CBaseModelInfo() {}
+#else
+	virtual void					dummy_dtor() {}
+#endif
 	virtual CAtomicModelInfo*		AsAtomicModelInfoPtr() { return nullptr; }
     virtual CDamageAtomicModelInfo*	AsDamageAtomicModelInfoPtr() { return nullptr; }
     virtual CLodAtomicModelInfo*	AsLodAtomicModelInfoPtr() { return nullptr; }
