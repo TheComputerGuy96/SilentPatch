@@ -4652,7 +4652,6 @@ BOOL InjectDelayedPatches_10()
 
 		// Fix some big messages staying on screen longer at high resolutions due to a cut sliding text feature
 		// Also since we're touching it, optionally allow to re-enable this feature.
-
 		if (const int INIoption = GetPrivateProfileIntW(L"SilentPatch", L"SlidingMissionTitleText", -1, wcModulePath); INIoption != -1)
 		{
 			using namespace SlidingTextsScalingFixes;
@@ -4745,6 +4744,31 @@ BOOL InjectDelayedPatches_10()
 				HookEach_PaddingYSize(paddingYSizes, PatchFloat);
 				InterceptCall(0x71A631, orgProcessCurrentString, ProcessCurrentString_Scale<paddingXSizes.size(), paddingYSizes.size()>);
 			}
+		}
+
+
+		// Fix credits not scaling to resolution
+		// Moved here for compatibility with wshps.asi
+		if (MemEquals(0x5A8679, {0xD8, 0xC1, 0xD8, 0x05}) && MemEquals(0x5A8679+8, {0xD8, 0x64, 0x24, 0x18, 0xD9, 0x54, 0x24, 0x14})) // Verify wshps.asi isn't already patching the credits
+		{
+			using namespace CreditsScalingFixes;
+
+			std::array<uintptr_t, 2> creditPrintString = { 0x5A8707, 0x5A8785 };
+
+			HookEach_PrintString(creditPrintString, InterceptCall);
+			InterceptCall(0x5A86C0, orgSetScale, SetScale_ScaleToRes);
+
+			// Fix the credits cutting off on the bottom early, they don't do that in III
+			// but it regressed in VC and SA
+			static const float topMargin = 1.0f;
+			static const float bottomMargin = -(**(float**)(0x5A869A + 2));
+
+			Patch(0x5A8689 + 2, &topMargin);
+			Patch(0x5A869A + 2, &bottomMargin);
+
+			// As we now scale everything on PrintString time, the resolution height checks need to be unscaled.
+			Patch(0x5A8660 + 2, &FIXED_RES_HEIGHT_SCALE);
+			Patch(0x5AF8C9 + 2, &FIXED_RES_HEIGHT_SCALE);
 		}
 
 
@@ -5285,6 +5309,46 @@ BOOL InjectDelayedPatches_NewBinaries()
 
 			HookEach_PaddingYSize_Double(paddingYSizes, PatchDouble);
 			InterceptCall(processCurrentString, orgProcessCurrentString, ProcessCurrentString_Scale_NewBinaries<paddingYSizes.size()>);
+		}
+		TXN_CATCH();
+
+
+		// Fix credits not scaling to resolution
+		// Moved here for compatibility with wshps.asi
+		try
+		{
+			using namespace CreditsScalingFixes;
+
+			// Verify wshps.asi isn't already patching the credits
+			(void)get_pattern("DE C2 D9 45 18 DE EA", 1);
+
+			std::array<void*, 2> creditPrintString = {
+				get_pattern("E8 ? ? ? ? 83 C4 0C 80 7D 1C 00"),
+				get_pattern("D9 1C 24 E8 ? ? ? ? DD 05 ? ? ? ? 83 C4 0C 5E", 3),
+			};
+
+			auto setScale = get_pattern("D9 1C 24 E8 ? ? ? ? 83 C4 08 68 FF 00 00 00 6A 00 6A 00 6A 00", 3);
+
+			// Fix the credits cutting off on the bottom early, they don't do that in III
+			// but it regressed in VC and SA
+			auto positionOffset = get_pattern("DE C2 D9 45 18 DE EA D9 C9 D9 5D 14 D9 05", 12 + 2);
+
+			// As we now scale everything on PrintString time, the resolution height checks need to be unscaled.
+			void* resHeightScales[] = {
+				get_pattern("DB 05 ? ? ? ? 57 8B 7D 14", 2),
+				get_pattern("A1 ? ? ? ? 03 45 FC 89 45 F4", 1)
+			};
+
+			static const float topMargin = 1.0f;
+			Patch(positionOffset, &topMargin);
+
+			HookEach_PrintString(creditPrintString, InterceptCall);
+			InterceptCall(setScale, orgSetScale, SetScale_ScaleToRes);
+
+			for (void* addr : resHeightScales)
+			{
+				Patch(addr, &FIXED_RES_HEIGHT_SCALE);
+			}
 		}
 		TXN_CATCH();
 
@@ -6353,29 +6417,6 @@ void Patch_SA_10(HINSTANCE hInstance)
 
 		InterceptCall(AddressByRegion_10(0x7461D8), orgRwEngineGetSubSystemInfo, RwEngineGetSubSystemInfo_GetFriendlyNames);
 		InterceptCall(AddressByRegion_10(0x7461ED), orgRwEngineGetCurrentSubSystem, RwEngineGetCurrentSubSystem_FromSettings);
-	}
-
-
-	// Fix credits not scaling to resolution
-	{
-		using namespace CreditsScalingFixes;
-
-		std::array<uintptr_t, 2> creditPrintString = { 0x5A8707, 0x5A8785 };
-
-		HookEach_PrintString(creditPrintString, InterceptCall);
-		InterceptCall(0x5A86C0, orgSetScale, SetScale_ScaleToRes);
-
-		// Fix the credits cutting off on the bottom early, they don't do that in III
-		// but it regressed in VC and SA
-		static const float topMargin = 1.0f;
-		static const float bottomMargin = -(**(float**)(0x5A869A + 2));
-
-		Patch(0x5A8689 + 2, &topMargin);
-		Patch(0x5A869A + 2, &bottomMargin);
-
-		// As we now scale everything on PrintString time, the resolution height checks need to be unscaled.
-		Patch(0x5A8660 + 2, &FIXED_RES_HEIGHT_SCALE);
-		Patch(0x5AF8C9 + 2, &FIXED_RES_HEIGHT_SCALE);
 	}
 
 
@@ -8507,40 +8548,6 @@ void Patch_SA_NewBinaries_Common(HINSTANCE hInstance)
 		InterceptCall(rwEngineGetCurrentSubSystem, orgRwEngineGetCurrentSubSystem, RwEngineGetCurrentSubSystem_FromSettings);
 	}
 	TXN_CATCH();
-
-
-	// Fix credits not scaling to resolution
-	{
-		using namespace CreditsScalingFixes;
-
-		std::array<void*, 2> creditPrintString = {
-			get_pattern("E8 ? ? ? ? 83 C4 0C 80 7D 1C 00"),
-			get_pattern("D9 1C 24 E8 ? ? ? ? DD 05 ? ? ? ? 83 C4 0C 5E", 3),
-		};
-
-		auto setScale = get_pattern("D9 1C 24 E8 ? ? ? ? 83 C4 08 68 FF 00 00 00 6A 00 6A 00 6A 00", 3);
-
-		// Fix the credits cutting off on the bottom early, they don't do that in III
-		// but it regressed in VC and SA
-		auto positionOffset = get_pattern("DE C2 D9 45 18 DE EA D9 C9 D9 5D 14 D9 05", 12 + 2);
-
-		// As we now scale everything on PrintString time, the resolution height checks need to be unscaled.
-		void* resHeightScales[] = {
-			get_pattern("DB 05 ? ? ? ? 57 8B 7D 14", 2),
-			get_pattern("A1 ? ? ? ? 03 45 FC 89 45 F4", 1)
-		};
-
-		static const float topMargin = 1.0f;
-		Patch(positionOffset, &topMargin);
-
-		HookEach_PrintString(creditPrintString, InterceptCall);
-		InterceptCall(setScale, orgSetScale, SetScale_ScaleToRes);
-
-		for (void* addr : resHeightScales)
-		{
-			Patch(addr, &FIXED_RES_HEIGHT_SCALE);
-		}
-	}
 
 
 	// Fix some big messages staying on screen longer at high resolutions due to a cut sliding text feature
