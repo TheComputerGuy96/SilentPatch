@@ -722,7 +722,7 @@ namespace DodoKeyboardControls
 // ============= Resetting stats and variables on New Game =============
 namespace VariableResets
 {
-	static auto TimerInitialise = reinterpret_cast<void(*)()>(hook::get_pattern("83 E4 F8 68 ? ? ? ? E8", -6));
+	static void (*TimerInitialise)();
 
 	using VarVariant = std::variant< bool*, int* >;
 	std::vector<VarVariant> GameVariablesToReset;
@@ -736,8 +736,6 @@ namespace VariableResets
 				}, var );
 		}
 
-		// Functions that should have been called by the game but aren't...
-		TimerInitialise();
 		PurpleNinesGlitchFix();
 	}
 
@@ -757,8 +755,22 @@ namespace VariableResets
 	void GameInitialise(const char* path)
 	{
 		ReInitOurVariables();
+		TimerInitialise();
 		orgGameInitialise(path);
 	}
+
+	static void (__fastcall* DestroyAllGameCreatedEntities)(void* DMAudio);
+
+	template<std::size_t Index>
+	static void (__fastcall* orgService)(void* DMAudio);
+
+	template<std::size_t Index>
+	static void __fastcall Service_AndDestroyEntities(void* DMAudio)
+	{
+		DestroyAllGameCreatedEntities(DMAudio);
+		orgService<Index>(DMAudio);
+	}
+	HOOK_EACH_INIT(Service, orgService, Service_AndDestroyEntities);
 }
 
 
@@ -2354,8 +2366,22 @@ void Patch_III_Common()
 			get_pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? C7 05", 7)
 		};
 
+		TimerInitialise = reinterpret_cast<decltype(TimerInitialise)>(get_pattern("83 E4 F8 68 ? ? ? ? E8", -6));
+
+		// In GTA III, we also need to backport one more fix from VC to avoid issues with looping audio entities:
+		// CMenuManager::DoSettingsBeforeStartingAGame needs to call cDMAudio::DestroyAllGameCreatedEntities
+		DestroyAllGameCreatedEntities = reinterpret_cast<decltype(DestroyAllGameCreatedEntities)>(ReadCallFrom(
+			get_pattern("B9 ? ? ? ? E8 ? ? ? ? 31 DB BD ? ? ? ? 8D 40 00", 5)));
+
+		auto audio_service = pattern("B9 ? ? ? ? E8 ? ? ? ? B9 ? ? ? ? C6 05 ? ? ? ? ? E8").count(2);
+		std::array<void*, 2> audio_service_instances = {
+			audio_service.get(0).get<void>(5),
+			audio_service.get(1).get<void>(5),
+		};
+
 		InterceptCall(game_initialise, orgGameInitialise, GameInitialise);
 		HookEach_ReInitGameObjectVariables(reinit_game_object_variables, InterceptCall);
+		HookEach_Service(audio_service_instances, InterceptCall);
 
 		// Variables to reset
 		GameVariablesToReset.emplace_back(*get_pattern<bool*>("80 3D ? ? ? ? ? 74 2A", 2)); // Free resprays

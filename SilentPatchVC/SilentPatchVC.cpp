@@ -1133,7 +1133,7 @@ namespace IsPlayerTargettingCharFix
 // ============= Resetting stats and variables on New Game =============
 namespace VariableResets
 {
-	static auto TimerInitialise = reinterpret_cast<void(*)()>(hook::get_pattern("83 E4 F8 68 ? ? ? ? E8", -6));
+	static void (*TimerInitialise)();
 
 	using VarVariant = std::variant< bool*, int* >;
 	std::vector<VarVariant> GameVariablesToReset;
@@ -1146,9 +1146,6 @@ namespace VariableResets
 				*v = {};
 				}, var );
 		}
-
-		// Functions that should have been called by the game but aren't...
-		TimerInitialise();
 	}
 
 	template<std::size_t Index>
@@ -1167,6 +1164,7 @@ namespace VariableResets
 	void GameInitialise(const char* path)
 	{
 		ReInitOurVariables();
+		TimerInitialise();
 		orgGameInitialise(path);
 	}
 }
@@ -2797,6 +2795,8 @@ void Patch_VC_Common()
 			get_pattern("74 05 E8 ? ? ? ? E8 ? ? ? ? 80 3D", 7),
 			get_pattern("C6 05 ? ? ? ? ? E8 ? ? ? ? C7 05", 7)
 		};
+
+		TimerInitialise = reinterpret_cast<decltype(TimerInitialise)>(get_pattern("83 E4 F8 68 ? ? ? ? E8", -6));
 
 		InterceptCall(game_initialise, orgGameInitialise, GameInitialise);
 		HookEach_ReInitGameObjectVariables(reinit_game_object_variables, InterceptCall);
