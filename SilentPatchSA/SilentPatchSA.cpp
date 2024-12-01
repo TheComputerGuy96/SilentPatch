@@ -1947,7 +1947,7 @@ namespace VariableResets
 		T m_timer;
 
 		TimeNextMadDriverChaseCreated_t()
-			: m_timer( (static_cast<float>(ConsoleRandomness::rand31()) / INT32_MAX) * 600.0f + 600.0f )
+			: m_timer( (static_cast<float>(ConsoleRandomness::rand31()) / static_cast<float>(INT32_MAX)) * 600.0f + 600.0f )
 		{
 		}
 	};
