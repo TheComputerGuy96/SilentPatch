@@ -19,6 +19,7 @@ symbols/
 x64/
 x86/
 build/
+build-premake/
 bld/
 [Bb]in/
 [Oo]bj/

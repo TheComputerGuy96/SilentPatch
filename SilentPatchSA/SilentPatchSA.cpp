@@ -3360,7 +3360,7 @@ namespace NewResolutionSelectionDialog
 	static void CreateNewButtonTooltip(HINSTANCE hInstance, HWND hDlg)
 	{
 		HWND hCheckbox = GetDlgItem(hDlg, IDC_REMEMBERRESCHOICE);
-		HWND hwndTip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_ALWAYSTIP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		HWND hwndTip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, NULL, WS_POPUP | TTS_ALWAYSTIP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 						hDlg, nullptr, hInstance, nullptr);
 
 		if (hCheckbox == nullptr || hwndTip == nullptr)
@@ -3368,13 +3368,13 @@ namespace NewResolutionSelectionDialog
 			return;
 		}
 
-		TOOLINFO toolInfo { sizeof(toolInfo) };
+		TOOLINFOW toolInfo { sizeof(toolInfo) };
 		toolInfo.hwnd = hDlg;
 		toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
 		toolInfo.uId = (UINT_PTR)hCheckbox;
-		toolInfo.lpszText = (LPWSTR)TEXT("Delete 'device_remembered.set' from GTA San Andreas User Files to show this dialog again.");
+		toolInfo.lpszText = (LPWSTR)L"Delete 'device_remembered.set' from GTA San Andreas User Files to show this dialog again.";
 
-		SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
+		SendMessageW(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
 	}
 
 	struct WrappedDialocFunc
