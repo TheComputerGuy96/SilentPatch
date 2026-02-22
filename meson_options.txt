@@ -1,0 +1,1 @@
+option('rwsdkpath', type: 'string', value: '', description: 'Path to the RenderWare (3.7) SDK')

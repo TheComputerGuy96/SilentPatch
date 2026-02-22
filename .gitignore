@@ -19,6 +19,7 @@ symbols/
 x64/
 x86/
 build/
+build-meson/
 bld/
 [Bb]in/
 [Oo]bj/
